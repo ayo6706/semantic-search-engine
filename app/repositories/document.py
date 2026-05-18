@@ -63,3 +63,14 @@ class DocumentRepository:
             .values(page_count=page_count, chunk_count=chunk_count)
         )
         return result.rowcount > 0
+
+    async def get_filenames_by_ids(self, doc_ids: set[str]) -> dict[str, str]:
+        """Batch-resolve doc_id → filename for a set of document IDs."""
+        if not doc_ids:
+            return {}
+        uuid_ids = [uuid.UUID(did) for did in doc_ids]
+        result = await self.session.execute(
+            select(Document.id, Document.filename)
+            .where(Document.id.in_(uuid_ids))
+        )
+        return {str(row.id): row.filename for row in result}
