@@ -10,7 +10,9 @@ from app.repositories.document import DocumentRepository
 from app.services.document import DocumentService
 from app.schemas.document import DocumentResponse, DocumentListResponse
 from app.core.config import infra_settings
+from app.core.redis import get_redis_client
 from app.integrations.vectorstores.chroma import ChromaDBVectorStore
+from app.services.cache import SearchCacheService
 
 
 router = APIRouter()
@@ -121,3 +123,9 @@ async def delete_document(
         file_path = os.path.join(infra_settings.UPLOAD_DIR, storage_filename)
         if os.path.exists(file_path):
             os.remove(file_path)
+
+    try:
+        cache = SearchCacheService(await get_redis_client())
+        await cache.invalidate_all()
+    except Exception:
+        logger.exception("Cache invalidation failed after deleting document %s", doc_id)
