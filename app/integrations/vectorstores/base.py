@@ -31,3 +31,23 @@ class BaseVectorStore(ABC):
             doc_id: The document UUID to delete.
         """
         pass
+
+    @abstractmethod
+    async def query(
+        self,
+        embedding: list[float],
+        top_k: int = 50,
+        doc_ids: list[str] | None = None
+    ) -> dict:
+        """Query the vector store by embedding similarity.
+        
+        Args:
+            embedding: The query vector.
+            top_k: Maximum number of results to return.
+            doc_ids: Optional list of document IDs to filter by.
+            
+        Returns:
+            A dictionary containing the query results (implementation specific format,
+            but should contain ids, documents, metadatas, and distances).
+        """
+        pass
