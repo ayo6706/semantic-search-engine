@@ -26,10 +26,12 @@ class InfraSettings(BaseSettings):
     DATABASE_URL: str
     CHROMA_HOST: str = "localhost"
     CHROMA_PORT: int = 8000
+    CHROMA_COLLECTION: str = "documents"
     REDIS_URL: str
     API_HOST: str = "0.0.0.0"
     API_PORT: int = 8080
     UPLOAD_DIR: str = "uploads"
+    MAX_UPLOAD_BYTES: int = 26214400  # 25 MB
     CORS_ORIGINS: list[str] = ["http://localhost:3000"]
 
 
@@ -67,6 +69,8 @@ class SearchSettings(BaseSettings):
     RRF_K: int = 60
     RERANK_TOP_N: int = 20
     CACHE_TTL_SECONDS: int = 300
+    CHUNK_SIZE: int = 1500
+    CHUNK_OVERLAP: int = 190
 
 
 infra_settings = InfraSettings()
