@@ -15,6 +15,8 @@ class InfraSettings(BaseSettings):
         CHROMA_HOST: ChromaDB server hostname.
         CHROMA_PORT: ChromaDB server port.
         REDIS_URL: Redis connection URL with password.
+        REDIS_CONNECT_TIMEOUT: Redis socket connection timeout in seconds.
+        REDIS_SOCKET_TIMEOUT: Redis socket read/write timeout in seconds.
         API_HOST: Host to bind the API server.
         API_PORT: Port to bind the API server.
         UPLOAD_DIR: Local directory for uploaded files.
@@ -28,6 +30,8 @@ class InfraSettings(BaseSettings):
     CHROMA_PORT: int = 8000
     CHROMA_COLLECTION: str = "documents"
     REDIS_URL: str
+    REDIS_CONNECT_TIMEOUT: float = 2.0
+    REDIS_SOCKET_TIMEOUT: float = 2.0
     API_HOST: str = "0.0.0.0"
     API_PORT: int = 8080
     UPLOAD_DIR: str = "uploads"
