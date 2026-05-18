@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 import litellm
 
@@ -10,7 +11,11 @@ from app.services.chunker import RecursiveCharacterTextSplitter
 from app.integrations.llm.litellm import LiteLLMProvider
 from app.integrations.vectorstores.chroma import ChromaDBVectorStore
 from app.services.ingestion import IngestionService
+from app.services.cache import SearchCacheService
 from app.core.config import llm_settings
+from app.core.redis import close_redis, get_redis_client
+
+logger = logging.getLogger(__name__)
 
 
 async def startup(ctx: dict[str, Any]) -> None:
@@ -22,7 +27,7 @@ async def startup(ctx: dict[str, Any]) -> None:
 
 async def shutdown(ctx: dict[str, Any]) -> None:
     """Clean up dependencies."""
-    pass
+    await close_redis()
 
 async def process_document(ctx: dict[str, Any], document_id: str) -> None:
     """arq task to process a document."""
@@ -41,6 +46,12 @@ async def process_document(ctx: dict[str, Any], document_id: str) -> None:
         )
         
         await ingestion_service.process_document(document_id)
+
+    try:
+        cache = SearchCacheService(await get_redis_client())
+        await cache.invalidate_all()
+    except Exception:
+        logger.exception("Cache invalidation failed, continuing ingestion")
 
 
 class WorkerSettings:
