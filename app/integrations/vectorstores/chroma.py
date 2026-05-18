@@ -13,7 +13,7 @@ class ChromaDBVectorStore(BaseVectorStore):
 
     async def _get_client(self):
         if not self._client:
-            self._client = await chromadb.AsyncHttpClient(
+            self._client = chromadb.AsyncHttpClient(
                 host=infra_settings.CHROMA_HOST,
                 port=infra_settings.CHROMA_PORT,
                 settings=Settings(anonymized_telemetry=False)
@@ -47,6 +47,4 @@ class ChromaDBVectorStore(BaseVectorStore):
 
     async def delete_by_doc_id(self, doc_id: str) -> None:
         collection = await self._get_collection()
-        # ChromaDB ignores deletes if no record matches, so we don't need a blanket try/except
-        # Any exception raised here would be an infrastructure error (e.g. connection refused)
         await collection.delete(where={"doc_id": doc_id})

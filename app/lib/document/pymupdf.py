@@ -18,23 +18,25 @@ class PyMuPDFParser(BaseDocumentParser):
             ValueError: If the PDF cannot be opened or is corrupted.
         """
         pages = []
+        doc = None
         try:
             doc = fitz.open(file_path)
             # Check if it's a valid PDF and can be opened
             if not doc.is_pdf:
-                doc.close()
                 raise ValueError("File is not a valid PDF")
-                
+
             for page_num in range(len(doc)):
                 page = doc.load_page(page_num)
                 text = page.get_text()
                 # page_number is 1-indexed for the user
                 pages.append(PageContent(page_number=page_num + 1, text=text))
-                
-            doc.close()
+
             return pages
-            
+
         except Exception as e:
             if isinstance(e, ValueError):
                 raise
             raise ValueError(f"Failed to open or parse PDF: {e}")
+        finally:
+            if doc is not None:
+                doc.close()

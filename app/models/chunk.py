@@ -12,7 +12,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import Computed, ForeignKey, Index, Text, func
+from sqlalchemy import Computed, ForeignKey, Index, Text, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -67,4 +67,5 @@ class Chunk(Base):
     __table_args__ = (
         Index("chunks_fts_idx", "fts_vector", postgresql_using="gin"),
         Index("chunks_doc_id_idx", "doc_id"),
+        UniqueConstraint("doc_id", "chunk_index", name="uq_chunk_doc_id_index"),
     )
