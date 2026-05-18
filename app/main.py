@@ -16,6 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.router import api_router
 from app.core.config import infra_settings
 from app.core.database import engine
+from app.core.redis import close_redis
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +35,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("Semantic Search Engine starting up")
     yield
     logger.info("Semantic Search Engine shutting down")
+    try:
+        await close_redis()
+    except Exception:
+        logger.exception("Error closing Redis connection")
     try:
         await engine.dispose()
     except Exception:
