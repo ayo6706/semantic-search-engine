@@ -46,7 +46,7 @@ services:
 
   api:
     build: ./backend
-    command: sh -c "alembic upgrade head && fastapi dev app/main.py --host 0.0.0.0 --port 8080"
+    command: sh -c "alembic upgrade head && fastapi run app/main.py --host 0.0.0.0 --port 8080"
     ports:
       - "8080:8080"
     volumes:
@@ -54,6 +54,7 @@ services:
       - ./backend/alembic:/app/alembic
       - ./backend/alembic.ini:/app/alembic.ini
       - uploads:/app/uploads
+      - ./eval:/app/eval
     env_file:
       - .env
     environment:
