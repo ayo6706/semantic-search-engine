@@ -1,0 +1,119 @@
+.result-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+  border-left-width: 4px;
+  border-left-style: solid;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fadeSlideIn 0.3s ease forwards;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.result-card:hover {
+  background-color: var(--bg-surface-hover);
+  box-shadow: var(--shadow);
+}
+
+@keyframes fadeSlideIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.result-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.filename {
+  font-weight: 600;
+  color: var(--text-h);
+  font-size: 1.05rem;
+}
+
+.page-num {
+  font-size: 0.85rem;
+  color: var(--text);
+  background-color: var(--bg);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.score-badge-container {
+  position: relative;
+  cursor: help;
+}
+
+.score-badge {
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  border: 1px solid;
+  background-color: rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+}
+
+.score-badge-container:hover .score-badge {
+  transform: scale(1.05);
+}
+
+.score-tooltip {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background-color: var(--bg);
+  border: 1px solid var(--border-highlight);
+  border-radius: var(--radius);
+  padding: 12px;
+  box-shadow: var(--shadow);
+  z-index: 10;
+  min-width: 140px;
+  animation: fadeIn 0.2s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+}
+
+.tooltip-row:last-child {
+  margin-bottom: 0;
+}
+
+.tooltip-row span:first-child {
+  color: var(--text);
+}
+
+.tooltip-row span.mono {
+  color: var(--text-h);
+}
+
+.snippet-content {
+  color: var(--text);
+  line-height: 1.6;
+  font-size: 0.95rem;
+  word-break: break-word;
+}
