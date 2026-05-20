@@ -54,7 +54,7 @@ services:
       - ./backend/alembic:/app/alembic
       - ./backend/alembic.ini:/app/alembic.ini
       - uploads:/app/uploads
-      - ./eval:/app/eval
+      - ./backend/eval:/app/eval
     env_file:
       - .env
     environment:

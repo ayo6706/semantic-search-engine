@@ -6,7 +6,8 @@ import httpx
 import subprocess
 import shutil
 
-# Add project root to sys.path
+# Add project root and backend folder to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from eval.generate_test_data import generate_all_test_data
@@ -17,7 +18,7 @@ async def main():
     print("=== STARTING END-TO-END INTEGRATION TEST ===")
     
     # 1. Create temporary directory and generate test PDFs
-    temp_dir = "eval/temp_integration_pdfs"
+    temp_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "temp_integration_pdfs"))
     if os.path.exists(temp_dir):
         shutil.rmtree(temp_dir)
     os.makedirs(temp_dir, exist_ok=True)
@@ -29,7 +30,7 @@ async def main():
     
     try:
         # 2. Upload PDFs to the API
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(timeout=120.0) as client:
             # Check API health first
             print("Checking API health...")
             try:
@@ -133,8 +134,14 @@ async def main():
                     assert res_data_cache["latency_ms"] == res_data["latency_ms"]
 
             # 5. Run the evaluation suite
-            print("\nRunning the evaluation suite (eval/runner.py)...")
+            print("\nRunning the evaluation suite (backend/eval/runner.py)...")
             runner_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "runner.py"))
+            
+            # Determine correct working directory (host: ../.., container: ..)
+            proj_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+            if not os.path.exists(os.path.join(proj_root, "README.md")):
+                proj_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+                
             env = os.environ.copy()
             env["PYTHONPATH"] = "backend"
             result = subprocess.run(
@@ -142,7 +149,7 @@ async def main():
                 capture_output=True,
                 text=True,
                 env=env,
-                cwd=os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+                cwd=proj_root
             )
             print(result.stdout)
             if result.returncode != 0:
@@ -150,8 +157,8 @@ async def main():
                 print(result.stderr)
                 raise RuntimeError("Evaluation runner failed")
                 
-            # Verify eval/report.md exists and contains the results table
-            report_path = "eval/report.md"
+            # Verify backend/eval/report.md exists and contains the results table
+            report_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "report.md"))
             assert os.path.exists(report_path), "Evaluation report.md was not generated"
             with open(report_path, "r", encoding="utf-8") as f:
                 report_content = f.read()

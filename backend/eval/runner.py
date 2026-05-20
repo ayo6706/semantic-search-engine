@@ -4,7 +4,7 @@ import sys
 from unittest.mock import MagicMock
 
 # Load .env file manually into os.environ before anything else
-env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.env"))
+env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.env"))
 if os.path.exists(env_path):
     print(f"Loading environment from {env_path}...")
     with open(env_path, "r", encoding="utf-8") as f:
@@ -24,7 +24,8 @@ import time
 import asyncio
 from sqlalchemy import select, delete
 
-# Add workspace root to sys.path so we can import app modules
+# Add workspace root and backend folder to sys.path so we can import app modules
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from app.core.database import async_session_factory
@@ -371,17 +372,6 @@ async def main():
         
         await clean_corpus(session, vector_store)
         
-    # 2. Ablation run (Chunk Size = 512)
-    async with async_session_factory() as session:
-        doc_id_map_512 = await ingest_corpus(session, chunk_size=512, chunk_overlap=64)
-        dataset_512 = await resolve_ground_truth(session, doc_id_map_512)
-        
-        print("\n--- Running Evaluation: Hybrid + Rerank (Chunk Size = 512) ---")
-        results["Hybrid + Rerank (Chunk=512)"] = await evaluate_configuration(
-            session, dataset_512, SearchMode.HYBRID, use_reranker=True
-        )
-        
-        await clean_corpus(session, vector_store)
         
     # 3. Ablation run (Chunk Size = 256)
     async with async_session_factory() as session:

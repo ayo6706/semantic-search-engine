@@ -1,10 +1,10 @@
 # Hybrid Semantic Search Engine
 
-A production-grade, high-performance hybrid semantic search engine built with FastAPI, PostgreSQL (sparse keyword search with GIN index), ChromaDB (dense vector search), Redis (query caching), and a Cross-Encoder model (re-ranking). 
+A robust, modular hybrid semantic search engine built with FastAPI, PostgreSQL (sparse keyword search with GIN index), ChromaDB (dense vector search), Redis (query caching), and a Cross-Encoder model (re-ranking). 
 
 The project separates the retrieval pipeline from the generation pipeline (RAG), allowing for dedicated tuning, granular latency optimization, and standalone information retrieval evaluation.
 
-Includes a full retrieval ablation across 45 queries (keyword, semantic, hybrid) evaluating dense-only, sparse-only, hybrid RRF, and cross-encoder re-ranking configurations. Key finding: MS MARCO re-ranker decreases MRR on legal domain queries — see the [Retrieval Ablation Evaluation Report](eval/report.md) for analysis and next steps.
+Includes a full retrieval ablation across 45 queries (keyword, semantic, hybrid) evaluating dense-only, sparse-only, hybrid RRF, and cross-encoder re-ranking configurations. Key finding: MS MARCO re-ranker decreases MRR on legal domain queries — see the [Retrieval Ablation Evaluation Report](backend/eval/report.md) for analysis and next steps.
 
 ---
 
@@ -204,7 +204,7 @@ This boots up the following services:
 
 The system implements a standalone evaluation suite measuring information retrieval accuracy. The ground-truth test suite consists of 45 test queries (divided into 15 keyword, 15 semantic, and 15 hybrid queries) evaluated against 3 legal contracts.
 
-A full analysis of per-category accuracy breakdown and stage-level latency is available in the standalone [Retrieval Ablation Evaluation Report](eval/report.md).
+A full analysis of per-category accuracy breakdown and stage-level latency is available in the standalone [Retrieval Ablation Evaluation Report](backend/eval/report.md).
 
 ### Metrics Defined
 - **Mean Reciprocal Rank (MRR)**: Evaluates the rank position of the first relevant result.
@@ -215,20 +215,19 @@ A full analysis of per-category accuracy breakdown and stage-level latency is av
 
 | Configuration | MRR | NDCG@10 | Precision@5 | Latency (ms) |
 | :--- | :---: | :---: | :---: | :---: |
-| **Dense Only** | 0.9556 | 0.9672 | 0.2000 | 1242.22 ms |
-| **Sparse Only** | 0.3778 | 0.3778 | 0.0756 | 3.52 ms |
-| **Hybrid RRF** | 0.9667 | 0.9754 | 0.2000 | 11.36 ms |
-| **Hybrid + Rerank** | 0.9667 | 0.9754 | 0.2000 | 8.52 ms |
-| **Hybrid + Rerank (Chunk=512)** | 0.9667 | 0.9754 | 0.2000 | 10.67 ms |
-| **Hybrid + Rerank (Chunk=256)** | 0.7667 | 0.7987 | 0.1778 | 11.88 ms |
+| **Dense Only** | 0.9556 | 0.9672 | 0.2000 | 1213.28 ms |
+| **Sparse Only** | 0.3778 | 0.3778 | 0.0756 | 3.50 ms |
+| **Hybrid RRF** | 0.9667 | 0.9754 | 0.2000 | 18.90 ms |
+| **Hybrid + Rerank** | 0.9667 | 0.9754 | 0.2000 | 13.65 ms |
+| **Hybrid + Rerank (Chunk=256)** | 0.7667 | 0.7987 | 0.1778 | 15.22 ms |
 
 ### Key Findings
 1. **Re-ranking does not improve overall MRR over Hybrid RRF**: Both configurations achieve `0.9667` MRR on the baseline chunk size. Under smaller chunk sizes (e.g., Chunk=256), overall MRR drops to `0.7667`. A general MS MARCO-style re-ranker can be domain-mismatched for legal clause retrieval and fails to show an advantage on this dataset.
 2. **Dense retrieval dominates the aggregate set**: Dense Only reaches `0.9556` MRR while Sparse Only reaches `0.3778`, confirming the current legal queries are better served by embedding semantics than keyword overlap alone.
 3. **Hybrid RRF improves over Dense Only**: Hybrid RRF improves MRR from `0.9556` to `0.9667` by combining dense retrieval with keyword matching, proving the utility of a hybrid approach.
 4. **Precision@5 is capped by the ground truth design**: Each query currently has one relevant chunk, so the best possible Precision@5 is `1 / 5 = 0.2000`.
-5. **The 350ms latency target is not met in local runs without caching**: Dense Only averages `1242.22 ms` due to local inference/network embedding-call latency.
-6. **Chunk-size comparison reveals performance trade-offs**: Running the evaluator at chunk sizes of 256, 512, and 1024 shows that a larger chunk size (512 or 1024) significantly improves retrieval performance over smaller chunk sizes (256) for legal documents.
+5. **The 350ms latency target is not met in local runs without caching**: Dense Only averages `1213.28 ms` due to local inference/network embedding-call latency.
+6. **Reducing chunk size significantly decreases retrieval accuracy**: Reducing chunk size from 1024 tokens (`Hybrid + Rerank` at `0.9667` MRR) to 256 tokens (`Hybrid + Rerank (Chunk=256)` at `0.7667` MRR) reduces MRR by `-0.2000`. Smaller chunk sizes restrict the semantic context of legal clauses, causing retrieval gaps.
 
 ---
 
@@ -236,23 +235,35 @@ A full analysis of per-category accuracy breakdown and stage-level latency is av
 
 ### Run Unit and Mock Tests
 Verify the code syntax and mock interfaces locally:
-```bash
+```powershell
+# PowerShell (Windows)
 $env:PYTHONPATH="backend"
 pytest backend/tests
+
+# Bash (Linux/macOS)
+PYTHONPATH=backend pytest backend/tests
 ```
 
 ### Run Retrieval Evaluation Suite
 Run the full ablation metrics generator:
-```bash
+```powershell
+# PowerShell (Windows)
 $env:PYTHONPATH="backend"
-python eval/runner.py
+python backend/eval/runner.py
+
+# Bash (Linux/macOS)
+PYTHONPATH=backend python backend/eval/runner.py
 ```
-This regenerates `eval/datasets/evaluation_results.json` and updates the `eval/report.md` metrics table.
+This regenerates `backend/eval/datasets/evaluation_results.json` and updates the `backend/eval/report.md` metrics table.
 
 ### Run End-to-End Integration Test
 Run the full automated integration pipeline against your active Docker stack:
-```bash
+```powershell
+# PowerShell (Windows)
 $env:PYTHONPATH="backend"
-python eval/integration_test.py
+python backend/eval/integration_test.py
+
+# Bash (Linux/macOS)
+PYTHONPATH=backend python backend/eval/integration_test.py
 ```
 This test covers generating test PDFs, calling API upload and checking statuses, validating query highlighting, verifying Redis cache invalidation, invoking the evaluation suite, and cleaning up records via DELETE calls.

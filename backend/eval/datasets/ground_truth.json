@@ -2,351 +2,351 @@
   {
     "query": "late payment interest rate penalty",
     "type": "hybrid",
-    "doc_id": "e1bf1eb8-b207-4f50-9037-ee0dd6e53d40",
+    "doc_id": "92685963-4099-46cb-91a8-bd836cc5d2d4",
     "relevant_chunk_ids": [
-      "65a86c0c-39fe-53d0-b0d7-4c3cf2aedb2c"
+      "35fa422c-d951-5ef8-916b-919111e26ec2"
     ]
   },
   {
     "query": "billing frequency and schedule",
     "type": "semantic",
-    "doc_id": "e1bf1eb8-b207-4f50-9037-ee0dd6e53d40",
+    "doc_id": "92685963-4099-46cb-91a8-bd836cc5d2d4",
     "relevant_chunk_ids": []
   },
   {
     "query": "accepted payment methods wire transfer credit card",
     "type": "hybrid",
-    "doc_id": "e1bf1eb8-b207-4f50-9037-ee0dd6e53d40",
+    "doc_id": "92685963-4099-46cb-91a8-bd836cc5d2d4",
     "relevant_chunk_ids": [
-      "d24e41f8-2d64-5d25-a4c5-c1f75fa51b84"
+      "104c94b1-6185-5dbc-8024-5f8937c4da4a"
     ]
   },
   {
     "query": "due date grace period",
     "type": "semantic",
-    "doc_id": "e1bf1eb8-b207-4f50-9037-ee0dd6e53d40",
+    "doc_id": "92685963-4099-46cb-91a8-bd836cc5d2d4",
     "relevant_chunk_ids": [
-      "65a86c0c-39fe-53d0-b0d7-4c3cf2aedb2c"
+      "35fa422c-d951-5ef8-916b-919111e26ec2"
     ]
   },
   {
     "query": "dispute billing invoice notification deadline",
     "type": "semantic",
-    "doc_id": "e1bf1eb8-b207-4f50-9037-ee0dd6e53d40",
+    "doc_id": "92685963-4099-46cb-91a8-bd836cc5d2d4",
     "relevant_chunk_ids": [
-      "63f43445-2ca0-5035-b829-1f551b3191d9"
+      "1e265ed2-1e63-55ca-bab1-491e8d475f6a"
     ]
   },
   {
     "query": "late fee terms $50 charge",
     "type": "keyword",
-    "doc_id": "e1bf1eb8-b207-4f50-9037-ee0dd6e53d40",
+    "doc_id": "92685963-4099-46cb-91a8-bd836cc5d2d4",
     "relevant_chunk_ids": [
-      "f813f9c2-881c-550c-8fc6-c7a85ba12ab8"
+      "cac6fa66-b6b6-5789-a0a6-bb8f2b29eabe"
     ]
   },
   {
     "query": "payment schedule installments monthly invoice",
     "type": "semantic",
-    "doc_id": "e1bf1eb8-b207-4f50-9037-ee0dd6e53d40",
+    "doc_id": "92685963-4099-46cb-91a8-bd836cc5d2d4",
     "relevant_chunk_ids": [
-      "d24e41f8-2d64-5d25-a4c5-c1f75fa51b84"
+      "104c94b1-6185-5dbc-8024-5f8937c4da4a"
     ]
   },
   {
     "query": "bank wire transfer details",
     "type": "keyword",
-    "doc_id": "e1bf1eb8-b207-4f50-9037-ee0dd6e53d40",
+    "doc_id": "92685963-4099-46cb-91a8-bd836cc5d2d4",
     "relevant_chunk_ids": [
-      "d24e41f8-2d64-5d25-a4c5-c1f75fa51b84"
+      "104c94b1-6185-5dbc-8024-5f8937c4da4a"
     ]
   },
   {
     "query": "consequences of non-payment or overdue",
     "type": "semantic",
-    "doc_id": "e1bf1eb8-b207-4f50-9037-ee0dd6e53d40",
+    "doc_id": "92685963-4099-46cb-91a8-bd836cc5d2d4",
     "relevant_chunk_ids": [
-      "65a86c0c-39fe-53d0-b0d7-4c3cf2aedb2c"
+      "35fa422c-d951-5ef8-916b-919111e26ec2"
     ]
   },
   {
     "query": "currency of payment USD EUR cash not accepted",
     "type": "hybrid",
-    "doc_id": "e1bf1eb8-b207-4f50-9037-ee0dd6e53d40",
+    "doc_id": "92685963-4099-46cb-91a8-bd836cc5d2d4",
     "relevant_chunk_ids": []
   },
   {
     "query": "payment terms Article 4.2",
     "type": "keyword",
-    "doc_id": "e1bf1eb8-b207-4f50-9037-ee0dd6e53d40",
+    "doc_id": "92685963-4099-46cb-91a8-bd836cc5d2d4",
     "relevant_chunk_ids": [
-      "65a86c0c-39fe-53d0-b0d7-4c3cf2aedb2c"
+      "35fa422c-d951-5ef8-916b-919111e26ec2"
     ]
   },
   {
     "query": "electronic invoice delivery email address",
     "type": "semantic",
-    "doc_id": "e1bf1eb8-b207-4f50-9037-ee0dd6e53d40",
+    "doc_id": "92685963-4099-46cb-91a8-bd836cc5d2d4",
     "relevant_chunk_ids": [
-      "63f43445-2ca0-5035-b829-1f551b3191d9"
+      "1e265ed2-1e63-55ca-bab1-491e8d475f6a"
     ]
   },
   {
     "query": "refund policy for prepaid services limit",
     "type": "semantic",
-    "doc_id": "e1bf1eb8-b207-4f50-9037-ee0dd6e53d40",
+    "doc_id": "92685963-4099-46cb-91a8-bd836cc5d2d4",
     "relevant_chunk_ids": []
   },
   {
     "query": "early payment discount percentage",
     "type": "hybrid",
-    "doc_id": "e1bf1eb8-b207-4f50-9037-ee0dd6e53d40",
+    "doc_id": "92685963-4099-46cb-91a8-bd836cc5d2d4",
     "relevant_chunk_ids": [
-      "6e671161-db34-5420-a91d-2dce6ef55158"
+      "fa5f13b3-fde7-5041-993a-b786cc5a88d5"
     ]
   },
   {
     "query": "payment security requirements and transactions",
     "type": "semantic",
-    "doc_id": "e1bf1eb8-b207-4f50-9037-ee0dd6e53d40",
+    "doc_id": "92685963-4099-46cb-91a8-bd836cc5d2d4",
     "relevant_chunk_ids": [
-      "d24e41f8-2d64-5d25-a4c5-c1f75fa51b84"
+      "104c94b1-6185-5dbc-8024-5f8937c4da4a"
     ]
   },
   {
     "query": "termination notice period requirements",
     "type": "hybrid",
-    "doc_id": "20627f08-3781-42ad-9e64-875ad4d84794",
+    "doc_id": "73fda6db-6fb4-4e47-bdcd-05966f9a4d6e",
     "relevant_chunk_ids": [
-      "ae095ab5-a759-5d9f-88c5-9d47cc7bedf2"
+      "30e0a99f-8837-5b4b-a96d-59488a445337"
     ]
   },
   {
     "query": "intellectual property rights and ownership assignment",
     "type": "semantic",
-    "doc_id": "20627f08-3781-42ad-9e64-875ad4d84794",
+    "doc_id": "73fda6db-6fb4-4e47-bdcd-05966f9a4d6e",
     "relevant_chunk_ids": [
-      "199e29a9-24f7-594d-8bf7-1c18470d5b6f"
+      "ed4fc4c3-2260-535a-b2b7-3dd296e61c48"
     ]
   },
   {
     "query": "confidentiality duration and obligations",
     "type": "semantic",
-    "doc_id": "20627f08-3781-42ad-9e64-875ad4d84794",
+    "doc_id": "73fda6db-6fb4-4e47-bdcd-05966f9a4d6e",
     "relevant_chunk_ids": [
-      "064e067b-01ad-5d3a-bdb4-c72dbbd77e65"
+      "ec274475-a765-57fd-9c86-f65e205af6dd"
     ]
   },
   {
     "query": "standard weekly working hours limit",
     "type": "hybrid",
-    "doc_id": "20627f08-3781-42ad-9e64-875ad4d84794",
+    "doc_id": "73fda6db-6fb4-4e47-bdcd-05966f9a4d6e",
     "relevant_chunk_ids": [
-      "8f2cdaa7-c9ee-55e1-978e-eaf8d390ec03"
+      "d1e8496e-828f-57cf-a551-775c2c32b213"
     ]
   },
   {
     "query": "annual leave entitlement paid time off days",
     "type": "semantic",
-    "doc_id": "20627f08-3781-42ad-9e64-875ad4d84794",
+    "doc_id": "73fda6db-6fb4-4e47-bdcd-05966f9a4d6e",
     "relevant_chunk_ids": [
-      "ae095ab5-a759-5d9f-88c5-9d47cc7bedf2"
+      "30e0a99f-8837-5b4b-a96d-59488a445337"
     ]
   },
   {
     "query": "probationary period duration limit",
     "type": "hybrid",
-    "doc_id": "20627f08-3781-42ad-9e64-875ad4d84794",
+    "doc_id": "73fda6db-6fb4-4e47-bdcd-05966f9a4d6e",
     "relevant_chunk_ids": [
-      "862dfeff-5555-5b46-8bdb-8ef8698e17c0"
+      "4b0b5596-b49b-5959-b2f2-1f786a6939f2"
     ]
   },
   {
     "query": "non-compete restriction geographical radius",
     "type": "hybrid",
-    "doc_id": "20627f08-3781-42ad-9e64-875ad4d84794",
+    "doc_id": "73fda6db-6fb4-4e47-bdcd-05966f9a4d6e",
     "relevant_chunk_ids": [
-      "8f2cdaa7-c9ee-55e1-978e-eaf8d390ec03"
+      "d1e8496e-828f-57cf-a551-775c2c32b213"
     ]
   },
   {
     "query": "sick leave notice and doctor note deadline",
     "type": "semantic",
-    "doc_id": "20627f08-3781-42ad-9e64-875ad4d84794",
+    "doc_id": "73fda6db-6fb4-4e47-bdcd-05966f9a4d6e",
     "relevant_chunk_ids": [
-      "0e7e7ac5-1470-5276-a7bd-80cb635a3472"
+      "e07d68e7-a78e-5c51-a1ee-fe29f79cd15e"
     ]
   },
   {
     "query": "overtime compensation rate extra pay",
     "type": "keyword",
-    "doc_id": "20627f08-3781-42ad-9e64-875ad4d84794",
+    "doc_id": "73fda6db-6fb4-4e47-bdcd-05966f9a4d6e",
     "relevant_chunk_ids": [
-      "8f2cdaa7-c9ee-55e1-978e-eaf8d390ec03"
+      "d1e8496e-828f-57cf-a551-775c2c32b213"
     ]
   },
   {
     "query": "bonus eligibility criteria target",
     "type": "semantic",
-    "doc_id": "20627f08-3781-42ad-9e64-875ad4d84794",
+    "doc_id": "73fda6db-6fb4-4e47-bdcd-05966f9a4d6e",
     "relevant_chunk_ids": [
-      "8f2cdaa7-c9ee-55e1-978e-eaf8d390ec03"
+      "d1e8496e-828f-57cf-a551-775c2c32b213"
     ]
   },
   {
     "query": "maternity and paternity leave policy",
     "type": "semantic",
-    "doc_id": "20627f08-3781-42ad-9e64-875ad4d84794",
+    "doc_id": "73fda6db-6fb4-4e47-bdcd-05966f9a4d6e",
     "relevant_chunk_ids": [
-      "ae095ab5-a759-5d9f-88c5-9d47cc7bedf2"
+      "30e0a99f-8837-5b4b-a96d-59488a445337"
     ]
   },
   {
     "query": "equipment return upon separation termination",
     "type": "semantic",
-    "doc_id": "20627f08-3781-42ad-9e64-875ad4d84794",
+    "doc_id": "73fda6db-6fb4-4e47-bdcd-05966f9a4d6e",
     "relevant_chunk_ids": [
-      "ae095ab5-a759-5d9f-88c5-9d47cc7bedf2"
+      "30e0a99f-8837-5b4b-a96d-59488a445337"
     ]
   },
   {
     "query": "monthly base salary payment date",
     "type": "semantic",
-    "doc_id": "20627f08-3781-42ad-9e64-875ad4d84794",
+    "doc_id": "73fda6db-6fb4-4e47-bdcd-05966f9a4d6e",
     "relevant_chunk_ids": [
-      "862dfeff-5555-5b46-8bdb-8ef8698e17c0"
+      "4b0b5596-b49b-5959-b2f2-1f786a6939f2"
     ]
   },
   {
     "query": "conflict of interest disclosure",
     "type": "semantic",
-    "doc_id": "20627f08-3781-42ad-9e64-875ad4d84794",
+    "doc_id": "73fda6db-6fb4-4e47-bdcd-05966f9a4d6e",
     "relevant_chunk_ids": [
-      "199e29a9-24f7-594d-8bf7-1c18470d5b6f"
+      "ed4fc4c3-2260-535a-b2b7-3dd296e61c48"
     ]
   },
   {
     "query": "severance pay calculation years of service",
     "type": "semantic",
-    "doc_id": "20627f08-3781-42ad-9e64-875ad4d84794",
+    "doc_id": "73fda6db-6fb4-4e47-bdcd-05966f9a4d6e",
     "relevant_chunk_ids": [
-      "ae095ab5-a759-5d9f-88c5-9d47cc7bedf2"
+      "30e0a99f-8837-5b4b-a96d-59488a445337"
     ]
   },
   {
     "query": "limitation of liability maximum cap",
     "type": "hybrid",
-    "doc_id": "68a3b88f-b0f2-4de1-8194-94ba9d9aaf66",
+    "doc_id": "e8a42f07-38bb-4b2b-a23b-0ebd42d89f53",
     "relevant_chunk_ids": [
-      "b9e2590a-17a2-58dd-b775-593435b857df"
+      "08066141-7375-5e3c-8c20-4d9f9392383a"
     ]
   },
   {
     "query": "governing law state of New York jurisdiction",
     "type": "hybrid",
-    "doc_id": "68a3b88f-b0f2-4de1-8194-94ba9d9aaf66",
+    "doc_id": "e8a42f07-38bb-4b2b-a23b-0ebd42d89f53",
     "relevant_chunk_ids": [
-      "b9e2590a-17a2-58dd-b775-593435b857df"
+      "08066141-7375-5e3c-8c20-4d9f9392383a"
     ]
   },
   {
     "query": "account suspension and termination conditions",
     "type": "semantic",
-    "doc_id": "68a3b88f-b0f2-4de1-8194-94ba9d9aaf66",
+    "doc_id": "e8a42f07-38bb-4b2b-a23b-0ebd42d89f53",
     "relevant_chunk_ids": []
   },
   {
     "query": "Article 7.3 specifications exclusions",
     "type": "keyword",
-    "doc_id": "68a3b88f-b0f2-4de1-8194-94ba9d9aaf66",
+    "doc_id": "e8a42f07-38bb-4b2b-a23b-0ebd42d89f53",
     "relevant_chunk_ids": [
-      "41daed75-ca60-5cd1-9709-ff11b449f357"
+      "a0e43a9b-592c-5a37-90d0-579d58a8d330"
     ]
   },
   {
     "query": "dispute resolution binding arbitration process",
     "type": "semantic",
-    "doc_id": "68a3b88f-b0f2-4de1-8194-94ba9d9aaf66",
+    "doc_id": "e8a42f07-38bb-4b2b-a23b-0ebd42d89f53",
     "relevant_chunk_ids": [
-      "2c0a0384-9eef-55b0-8ff0-875e1f643484"
+      "68ef1ba6-b653-5fca-b071-5942c4009eea"
     ]
   },
   {
     "query": "user content license grant to platform rights",
     "type": "semantic",
-    "doc_id": "68a3b88f-b0f2-4de1-8194-94ba9d9aaf66",
+    "doc_id": "e8a42f07-38bb-4b2b-a23b-0ebd42d89f53",
     "relevant_chunk_ids": [
-      "10108b11-8f1b-593f-ade9-23b9f82623de"
+      "ae3935cb-05f0-5f43-a2d6-76a3f41bc370"
     ]
   },
   {
     "query": "privacy policy incorporation terms",
     "type": "semantic",
-    "doc_id": "68a3b88f-b0f2-4de1-8194-94ba9d9aaf66",
+    "doc_id": "e8a42f07-38bb-4b2b-a23b-0ebd42d89f53",
     "relevant_chunk_ids": [
-      "10108b11-8f1b-593f-ade9-23b9f82623de"
+      "ae3935cb-05f0-5f43-a2d6-76a3f41bc370"
     ]
   },
   {
     "query": "acceptable use policy prohibited activities content",
     "type": "semantic",
-    "doc_id": "68a3b88f-b0f2-4de1-8194-94ba9d9aaf66",
+    "doc_id": "e8a42f07-38bb-4b2b-a23b-0ebd42d89f53",
     "relevant_chunk_ids": [
-      "fc44070d-8168-5eeb-b64f-a253140fa68f"
+      "c33cb667-2a41-5c37-a021-6506c528fd09"
     ]
   },
   {
     "query": "minimum age requirement to use service limits",
     "type": "hybrid",
-    "doc_id": "68a3b88f-b0f2-4de1-8194-94ba9d9aaf66",
+    "doc_id": "e8a42f07-38bb-4b2b-a23b-0ebd42d89f53",
     "relevant_chunk_ids": [
-      "10108b11-8f1b-593f-ade9-23b9f82623de"
+      "ae3935cb-05f0-5f43-a2d6-76a3f41bc370"
     ]
   },
   {
     "query": "indemnification obligations of the user",
     "type": "semantic",
-    "doc_id": "68a3b88f-b0f2-4de1-8194-94ba9d9aaf66",
+    "doc_id": "e8a42f07-38bb-4b2b-a23b-0ebd42d89f53",
     "relevant_chunk_ids": [
-      "b9e2590a-17a2-58dd-b775-593435b857df"
+      "08066141-7375-5e3c-8c20-4d9f9392383a"
     ]
   },
   {
     "query": "class action waiver in arbitration clause",
     "type": "hybrid",
-    "doc_id": "68a3b88f-b0f2-4de1-8194-94ba9d9aaf66",
+    "doc_id": "e8a42f07-38bb-4b2b-a23b-0ebd42d89f53",
     "relevant_chunk_ids": []
   },
   {
     "query": "force majeure clause excuses delay performance",
     "type": "semantic",
-    "doc_id": "68a3b88f-b0f2-4de1-8194-94ba9d9aaf66",
+    "doc_id": "e8a42f07-38bb-4b2b-a23b-0ebd42d89f53",
     "relevant_chunk_ids": [
-      "5175ef90-d119-542d-866d-601033cded72"
+      "a8d94dc5-4024-571c-b534-a0f5c2a7226c"
     ]
   },
   {
     "query": "severability of invalid provisions parts",
     "type": "semantic",
-    "doc_id": "68a3b88f-b0f2-4de1-8194-94ba9d9aaf66",
+    "doc_id": "e8a42f07-38bb-4b2b-a23b-0ebd42d89f53",
     "relevant_chunk_ids": [
-      "41daed75-ca60-5cd1-9709-ff11b449f357"
+      "a0e43a9b-592c-5a37-90d0-579d58a8d330"
     ]
   },
   {
     "query": "modification of terms notification updates",
     "type": "semantic",
-    "doc_id": "68a3b88f-b0f2-4de1-8194-94ba9d9aaf66",
+    "doc_id": "e8a42f07-38bb-4b2b-a23b-0ebd42d89f53",
     "relevant_chunk_ids": [
-      "10108b11-8f1b-593f-ade9-23b9f82623de"
+      "ae3935cb-05f0-5f43-a2d6-76a3f41bc370"
     ]
   },
   {
     "query": "trademark and copyright ownership platform assets",
     "type": "semantic",
-    "doc_id": "68a3b88f-b0f2-4de1-8194-94ba9d9aaf66",
+    "doc_id": "e8a42f07-38bb-4b2b-a23b-0ebd42d89f53",
     "relevant_chunk_ids": [
-      "10108b11-8f1b-593f-ade9-23b9f82623de"
+      "ae3935cb-05f0-5f43-a2d6-76a3f41bc370"
     ]
   }
 ]
