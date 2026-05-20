@@ -1,0 +1,123 @@
+:root {
+  /* Colors */
+  --bg: #0a0b0e;
+  --bg-surface: #12141a;
+  --bg-surface-hover: #1a1d24;
+  --text: #a1a3a7;
+  --text-h: #eef0f2;
+  --accent: hsl(185, 100%, 55%);
+  --accent-dim: hsla(185, 100%, 55%, 0.15);
+  --border: #23262d;
+  --border-highlight: #333842;
+  --danger: #ef4444;
+  --success: #10b981;
+  --warning: #f59e0b;
+
+  /* Fonts */
+  --sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+
+  /* Other */
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --radius: 8px;
+  
+  font-family: var(--sans);
+  color: var(--text);
+  background-color: var(--bg);
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-h);
+  margin-top: 0;
+  text-wrap: balance;
+}
+
+mark {
+  background-color: var(--accent-dim);
+  color: var(--text-h);
+  border-radius: 2px;
+  padding: 0 2px;
+  font-weight: 500;
+}
+
+button {
+  font-family: var(--sans);
+  cursor: pointer;
+}
+
+input, select {
+  font-family: var(--sans);
+}
+
+/* Focus States */
+input:focus-visible,
+button:focus-visible,
+select:focus-visible,
+.score-badge-container:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Utilities */
+.mono {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  top: -60px;
+  left: 16px;
+  background: var(--accent);
+  color: var(--bg);
+  padding: 8px 16px;
+  border-radius: 0 0 var(--radius) var(--radius);
+  font-weight: 600;
+  text-decoration: none;
+  z-index: 999;
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus-visible {
+  top: 0;
+  outline: none;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-delay: -1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    background-attachment: initial !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+  }
+}
