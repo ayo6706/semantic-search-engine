@@ -45,7 +45,14 @@ async def process_document(ctx: dict[str, Any], document_id: str) -> None:
             vector_store=ctx["vector_store"],
         )
         
-        await ingestion_service.process_document(document_id)
+        try:
+            await ingestion_service.process_document(document_id)
+        except Exception as e:
+            logger.error(f"Error processing document {document_id}: {e}")
+            from tenacity import RetryError
+            if isinstance(e, RetryError):
+                raise RuntimeError(f"Ingestion failed after retries: {e.last_attempt.exception()}") from None
+            raise
 
     try:
         cache = SearchCacheService(await get_redis_client())
