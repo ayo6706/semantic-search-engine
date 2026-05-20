@@ -16,7 +16,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu && \
     pip install --no-cache-dir -r requirements.txt
 
-RUN python -c "from sentence_transformers import CrossEncoder; CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2', cache_folder='/app/.cache/huggingface')"
+RUN python -c "from sentence_transformers import CrossEncoder, SentenceTransformer; CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2', cache_folder='/app/.cache/huggingface'); SentenceTransformer('sentence-transformers/all-mpnet-base-v2', cache_folder='/app/.cache/huggingface')"
 
 ENV HF_HUB_OFFLINE=1
 
