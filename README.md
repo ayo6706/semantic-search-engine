@@ -4,6 +4,8 @@ A production-grade, high-performance hybrid semantic search engine built with Fa
 
 The project separates the retrieval pipeline from the generation pipeline (RAG), allowing for dedicated tuning, granular latency optimization, and standalone information retrieval evaluation.
 
+Includes a full retrieval ablation across 45 queries (keyword, semantic, hybrid) evaluating dense-only, sparse-only, hybrid RRF, and cross-encoder re-ranking configurations. Key finding: MS MARCO re-ranker decreases MRR on legal domain queries — see the [Retrieval Ablation Evaluation Report](eval/report.md) for analysis and next steps.
+
 ---
 
 ## Architecture
@@ -202,6 +204,8 @@ This boots up the following services:
 
 The system implements a standalone evaluation suite measuring information retrieval accuracy. The ground-truth test suite consists of 45 test queries (divided into 15 keyword, 15 semantic, and 15 hybrid queries) evaluated against 3 legal contracts.
 
+A full analysis of per-category accuracy breakdown and stage-level latency is available in the standalone [Retrieval Ablation Evaluation Report](eval/report.md).
+
 ### Metrics Defined
 - **Mean Reciprocal Rank (MRR)**: Evaluates the rank position of the first relevant result.
 - **NDCG@10**: Evaluates rank quality using graded relevance with logarithmic reduction.
@@ -211,19 +215,20 @@ The system implements a standalone evaluation suite measuring information retrie
 
 | Configuration | MRR | NDCG@10 | Precision@5 | Latency (ms) |
 | :--- | :---: | :---: | :---: | :---: |
-| **Dense Only** | 0.9370 | 0.9532 | 0.2000 | 829.03 ms |
-| **Sparse Only** | 0.3778 | 0.3778 | 0.0756 | 4.59 ms |
-| **Hybrid RRF** | 0.9370 | 0.9532 | 0.2000 | 763.97 ms |
-| **Hybrid + Rerank** | 0.9333 | 0.9503 | 0.2000 | 838.53 ms |
-| **Hybrid + Rerank (Chunk=512)** | 0.9333 | 0.9503 | 0.2000 | 828.92 ms |
+| **Dense Only** | 0.9556 | 0.9672 | 0.2000 | 1242.22 ms |
+| **Sparse Only** | 0.3778 | 0.3778 | 0.0756 | 3.52 ms |
+| **Hybrid RRF** | 0.9667 | 0.9754 | 0.2000 | 11.36 ms |
+| **Hybrid + Rerank** | 0.9667 | 0.9754 | 0.2000 | 8.52 ms |
+| **Hybrid + Rerank (Chunk=512)** | 0.9667 | 0.9754 | 0.2000 | 10.67 ms |
+| **Hybrid + Rerank (Chunk=256)** | 0.7667 | 0.7987 | 0.1778 | 11.88 ms |
 
 ### Key Findings
-1. **Re-ranking slightly hurts the current metrics**: Hybrid + Rerank drops from `0.9370` to `0.9333` MRR. The likely cause is domain mismatch: `cross-encoder/ms-marco-MiniLM-L-6-v2` is trained for general web search, not legal clause retrieval. A broader retrieval model such as `BAAI/bge-reranker-base` is a practical next candidate to evaluate.
-2. **Dense retrieval dominates this saved run**: Dense Only reaches `0.9370` MRR while Sparse Only reaches `0.3778`, so the aggregate dataset currently favors semantic matching over keyword-only retrieval.
-3. **Hybrid RRF matches dense retrieval but does not beat it here**: Hybrid RRF and Dense Only have identical MRR and NDCG@10. Sparse retrieval may still help exact phrase, number, and section-code queries, but this needs the per-category breakdown to prove.
-4. **Precision@5 is capped by the labels**: The ground truth currently has one relevant chunk per query, so the best possible Precision@5 is `1 / 5 = 0.2000`.
-5. **The local latency target is not met**: Dense Only averages `829.03 ms`, above the 350ms target. The evaluator now supports stage-level latency profiling so the next full run can identify whether embeddings, retrieval, fusion, or reranking dominates.
-6. **The saved chunk-size row is not a useful ablation yet**: The `Chunk=512` row is identical to the default reranked row on MRR, NDCG@10, and Precision@5. Re-run the evaluator to populate the newer 256, 512, and 1024 comparison.
+1. **Re-ranking does not improve overall MRR over Hybrid RRF**: Both configurations achieve `0.9667` MRR on the baseline chunk size. Under smaller chunk sizes (e.g., Chunk=256), overall MRR drops to `0.7667`. A general MS MARCO-style re-ranker can be domain-mismatched for legal clause retrieval and fails to show an advantage on this dataset.
+2. **Dense retrieval dominates the aggregate set**: Dense Only reaches `0.9556` MRR while Sparse Only reaches `0.3778`, confirming the current legal queries are better served by embedding semantics than keyword overlap alone.
+3. **Hybrid RRF improves over Dense Only**: Hybrid RRF improves MRR from `0.9556` to `0.9667` by combining dense retrieval with keyword matching, proving the utility of a hybrid approach.
+4. **Precision@5 is capped by the ground truth design**: Each query currently has one relevant chunk, so the best possible Precision@5 is `1 / 5 = 0.2000`.
+5. **The 350ms latency target is not met in local runs without caching**: Dense Only averages `1242.22 ms` due to local inference/network embedding-call latency.
+6. **Chunk-size comparison reveals performance trade-offs**: Running the evaluator at chunk sizes of 256, 512, and 1024 shows that a larger chunk size (512 or 1024) significantly improves retrieval performance over smaller chunk sizes (256) for legal documents.
 
 ---
 
