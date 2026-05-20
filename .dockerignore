@@ -18,3 +18,11 @@ alembic/versions/__pycache__
 .pytest_cache
 htmlcov
 .coverage
+
+# Frontend dependencies and builds (built/run separately on host)
+frontend/
+node_modules/
+
+# Dev/Testing files
+.deepeval/
+tests/
