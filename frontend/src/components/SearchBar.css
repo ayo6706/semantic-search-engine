@@ -1,0 +1,89 @@
+.search-bar-container {
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0 16px;
+  height: 48px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  box-shadow: var(--shadow);
+}
+
+.search-bar-container.focused {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-dim), var(--shadow);
+}
+
+.search-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  color: var(--text);
+}
+
+.search-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-h);
+  font-size: 1rem;
+  outline: none;
+  width: 100%;
+}
+
+.search-input::placeholder {
+  color: var(--text);
+}
+
+.search-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.result-hint {
+  font-size: 0.85rem;
+  color: var(--text);
+  font-family: var(--sans);
+}
+
+.shortcut-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  width: 24px;
+  height: 24px;
+  transition: opacity 0.2s ease;
+}
+
+.shortcut-hint.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
