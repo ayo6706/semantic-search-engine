@@ -3,7 +3,7 @@
     "mrr": 0.9555555555555556,
     "p5": 0.2,
     "ndcg10": 0.9671937558730185,
-    "latency_ms": 1224.9896120892824,
+    "latency_ms": 13.373916229573767,
     "category_breakdown": {
       "keyword": {
         "mrr": 0.9,
@@ -13,24 +13,31 @@
       "semantic": {
         "mrr": 0.9821428571428571,
         "p5": 0.2,
-        "ndcg10": 0.9868189197704093
+        "ndcg10": 0.9868189197704091
       },
       "hybrid": {
         "mrr": 0.9166666666666666,
-        "p5": 0.20000000000000004,
+        "p5": 0.2,
         "ndcg10": 0.9384882922619097
       }
+    },
+    "measurement": {
+      "query_count": 45,
+      "warmup_runs": 1,
+      "measured_runs": 3,
+      "measured_query_count": 135,
+      "latency_ms": "mean per query across measured runs after warm-up"
     }
   },
   "Sparse Only": {
     "mrr": 0.37777777777777777,
     "p5": 0.07555555555555557,
     "ndcg10": 0.37777777777777777,
-    "latency_ms": 6.477816888784421,
+    "latency_ms": 1.165393748400405,
     "category_breakdown": {
       "keyword": {
         "mrr": 0.6,
-        "p5": 0.12000000000000002,
+        "p5": 0.12000000000000001,
         "ndcg10": 0.6
       },
       "semantic": {
@@ -43,13 +50,20 @@
         "p5": 0.08333333333333333,
         "ndcg10": 0.4166666666666667
       }
+    },
+    "measurement": {
+      "query_count": 45,
+      "warmup_runs": 1,
+      "measured_runs": 3,
+      "measured_query_count": 135,
+      "latency_ms": "mean per query across measured runs after warm-up"
     }
   },
   "Hybrid RRF": {
     "mrr": 0.9666666666666667,
     "p5": 0.2,
-    "ndcg10": 0.9753953169047639,
-    "latency_ms": 15.60805493386902,
+    "ndcg10": 0.9753953169047638,
+    "latency_ms": 15.138626770176753,
     "category_breakdown": {
       "keyword": {
         "mrr": 1.0,
@@ -59,20 +73,27 @@
       "semantic": {
         "mrr": 0.9821428571428571,
         "p5": 0.2,
-        "ndcg10": 0.9868189197704093
+        "ndcg10": 0.9868189197704091
       },
       "hybrid": {
         "mrr": 0.9166666666666666,
-        "p5": 0.20000000000000004,
+        "p5": 0.2,
         "ndcg10": 0.9384882922619097
       }
+    },
+    "measurement": {
+      "query_count": 45,
+      "warmup_runs": 1,
+      "measured_runs": 3,
+      "measured_query_count": 135,
+      "latency_ms": "mean per query across measured runs after warm-up"
     }
   },
   "Hybrid + Rerank": {
     "mrr": 0.9666666666666667,
     "p5": 0.2,
-    "ndcg10": 0.9753953169047639,
-    "latency_ms": 22.48714006725802,
+    "ndcg10": 0.9753953169047638,
+    "latency_ms": 13.643655836360132,
     "category_breakdown": {
       "keyword": {
         "mrr": 1.0,
@@ -82,32 +103,39 @@
       "semantic": {
         "mrr": 0.9821428571428571,
         "p5": 0.2,
-        "ndcg10": 0.9868189197704093
+        "ndcg10": 0.9868189197704091
       },
       "hybrid": {
         "mrr": 0.9166666666666666,
-        "p5": 0.20000000000000004,
+        "p5": 0.2,
         "ndcg10": 0.9384882922619097
       }
     },
+    "measurement": {
+      "query_count": 45,
+      "warmup_runs": 1,
+      "measured_runs": 3,
+      "measured_query_count": 135,
+      "latency_ms": "mean per query across measured runs after warm-up"
+    },
     "stage_latencies_ms": {
-      "query_embedding": 0.31709744459173334,
-      "dense_retrieval": 22.023222666110897,
-      "sparse_retrieval": 2.8074978225049563,
-      "rrf_fusion": 0.048539867404744856,
-      "reranking": 0.09828008915064856
+      "query_embedding": 0.18251717011918556,
+      "dense_retrieval": 13.394338362774795,
+      "sparse_retrieval": 1.472681540784564,
+      "rrf_fusion": 0.031244829598883236,
+      "reranking": 0.03555547386726916
     }
   },
   "Hybrid + Rerank (Chunk=256)": {
     "mrr": 0.7666666666666667,
     "p5": 0.17777777777777778,
-    "ndcg10": 0.7986717175396897,
-    "latency_ms": 24.1602483102017,
+    "ndcg10": 0.7986717175396896,
+    "latency_ms": 27.987467599935673,
     "category_breakdown": {
       "keyword": {
         "mrr": 0.8,
         "p5": 0.2,
-        "ndcg10": 0.8523719014285831
+        "ndcg10": 0.852371901428583
       },
       "semantic": {
         "mrr": 0.75,
@@ -120,12 +148,19 @@
         "ndcg10": 0.8025774794642881
       }
     },
+    "measurement": {
+      "query_count": 45,
+      "warmup_runs": 1,
+      "measured_runs": 3,
+      "measured_query_count": 135,
+      "latency_ms": "mean per query across measured runs after warm-up"
+    },
     "stage_latencies_ms": {
-      "query_embedding": 0.355991755592792,
-      "dense_retrieval": 23.67376786666379,
-      "sparse_retrieval": 2.548817532887268,
-      "rrf_fusion": 0.06710297780551223,
-      "reranking": 0.06338571013960366
+      "query_embedding": 0.5281792443754427,
+      "dense_retrieval": 27.19156091873258,
+      "sparse_retrieval": 3.179349977559738,
+      "rrf_fusion": 0.149754888843745,
+      "reranking": 0.11797254798390593
     }
   }
 }

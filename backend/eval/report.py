@@ -32,6 +32,14 @@ def same_metrics(results: dict, left: str, right: str) -> bool:
     return all(abs(results[left][key] - results[right][key]) < 0.0001 for key in keys)
 
 
+def measurement_metadata(results: dict) -> dict | None:
+    for metrics in results.values():
+        metadata = metrics.get("measurement")
+        if metadata:
+            return metadata
+    return None
+
+
 def generate_markdown_report(results: dict) -> str:
     lines = [
         "# Retrieval Ablation Evaluation Report",
@@ -50,6 +58,25 @@ def generate_markdown_report(results: dict) -> str:
             f"{metrics['p5']:.4f} | {metrics['latency_ms']:.2f} ms |"
         )
         
+    lines.append("")
+
+    metadata = measurement_metadata(results)
+    lines.append("## Measurement Protocol")
+    lines.append("")
+    if metadata:
+        lines.append(
+            f"Latency is reported as mean per-query wall-clock time across "
+            f"{metadata['measured_query_count']} measured queries "
+            f"({metadata['query_count']} queries x {metadata['measured_runs']} measured run(s)) "
+            f"after {metadata['warmup_runs']} warm-up run(s)."
+        )
+    else:
+        lines.append(
+            "This result file predates explicit measurement metadata. Treat the latency values as a legacy run where cold-start and warm-cache effects may be mixed."
+        )
+    lines.append(
+        "Sub-millisecond query embedding times indicate a cached or local embedding path, not a live network call to Gemini. Compare latency rows only when they were produced by the same warm-up and cache policy."
+    )
     lines.append("")
 
     if has_category_breakdown(results):
@@ -76,7 +103,7 @@ def generate_markdown_report(results: dict) -> str:
     if has_stage_latencies(results):
         lines.append("## Latency Breakdown by Stage")
         lines.append("")
-        lines.append("The concurrent retrievers run in parallel, so retrieval latency is dominated by the slower retriever.")
+        lines.append("The concurrent retrievers run in parallel, so retrieval latency is dominated by the slower retriever. `Avg Time` is the mean per measured query for the profiled configuration, using the measurement protocol above.")
         lines.append("")
         lines.append("| Configuration | Pipeline Stage | Subcomponent / Action | Avg Time (ms) | % of Profiled Time |")
         lines.append("| :--- | :--- | :--- | :---: | :---: |")
@@ -105,14 +132,22 @@ def generate_markdown_report(results: dict) -> str:
 
     rerank_delta = metric_delta(results, "Hybrid + Rerank", "Hybrid RRF", "mrr")
     if rerank_delta is not None:
-        direction = "decreases" if rerank_delta < 0 else "increases"
-        findings.append(
-            f"**The cross-encoder re-ranker {direction} MRR by `{rerank_delta:+.4f}`.** "
-            f"The saved results show `Hybrid RRF` at `{results['Hybrid RRF']['mrr']:.4f}` "
-            f"and `Hybrid + Rerank` at `{results['Hybrid + Rerank']['mrr']:.4f}`. "
-            "A general MS MARCO-style re-ranker can be domain-mismatched for legal clause retrieval "
-            "and should be validated before being presented as an automatic improvement."
-        )
+        if abs(rerank_delta) < 0.0001:
+            findings.append(
+                f"**The cross-encoder re-ranker does not improve MRR on this run.** "
+                f"Both `Hybrid RRF` and `Hybrid + Rerank` score `{results['Hybrid RRF']['mrr']:.4f}`. "
+                "A general MS MARCO-style re-ranker can be domain-mismatched for legal clause retrieval "
+                "and should be validated before being presented as an automatic improvement."
+            )
+        else:
+            direction = "decreases" if rerank_delta < 0 else "increases"
+            findings.append(
+                f"**The cross-encoder re-ranker {direction} MRR by `{rerank_delta:+.4f}`.** "
+                f"The saved results show `Hybrid RRF` at `{results['Hybrid RRF']['mrr']:.4f}` "
+                f"and `Hybrid + Rerank` at `{results['Hybrid + Rerank']['mrr']:.4f}`. "
+                "A general MS MARCO-style re-ranker can be domain-mismatched for legal clause retrieval "
+                "and should be validated before being presented as an automatic improvement."
+            )
 
     dense_mrr = results.get("Dense Only", {}).get("mrr")
     sparse_mrr = results.get("Sparse Only", {}).get("mrr")
@@ -150,12 +185,21 @@ def generate_markdown_report(results: dict) -> str:
 
     dense_latency = results.get("Dense Only", {}).get("latency_ms")
     if dense_latency is not None:
-        findings.append(
-            f"**The 350ms latency target is not met in the saved local run.** Dense Only averages "
-            f"`{dense_latency:.2f} ms`, and the other neural configurations are in the same range. "
-            "Treat this as a local inference or embedding-call bottleneck until the stage-level "
-            "profile proves otherwise."
-        )
+        if dense_latency <= 350:
+            findings.append(
+                f"**The warmed local run meets the 350ms latency target.** Dense Only averages "
+                f"`{dense_latency:.2f} ms` after the configured warm-up. This should be presented "
+                "as warm-cache retrieval latency, because the stage profile shows cached/local "
+                "query embeddings rather than live Gemini network calls."
+            )
+        else:
+            findings.append(
+                f"**The 350ms latency target is not met in the saved local run.** Dense Only averages "
+                f"`{dense_latency:.2f} ms`, but this row should not be compared directly against staged "
+                "hybrid timings unless both were produced under the same warm-up policy. The current "
+                "stage profile shows cached/local query embeddings, so cold-start ChromaDB or first-query "
+                "effects may dominate the legacy Dense Only row."
+            )
 
     if "Hybrid + Rerank (Chunk=256)" in results and "Hybrid + Rerank" in results:
         baseline_mrr = results["Hybrid + Rerank"]["mrr"]
@@ -174,6 +218,8 @@ def generate_markdown_report(results: dict) -> str:
     lines.append("## Next Steps")
     lines.append("")
     next_steps = []
+    if not measurement_metadata(results):
+        next_steps.append("Re-run the evaluator with the updated measurement metadata, for example `EVAL_WARMUP_RUNS=1 EVAL_MEASURED_RUNS=3 python backend/eval/runner.py`, before presenting latency as a steady-state benchmark.")
     if not has_category_breakdown(results) or not has_stage_latencies(results) or "Hybrid + Rerank (Chunk=256)" not in results:
         next_steps.append("Re-run `python backend/eval/runner.py` so `evaluation_results.json` includes the category breakdown, stage latencies, and the distinct 256 chunk-size run.")
     if not has_category_breakdown(results):
@@ -181,6 +227,7 @@ def generate_markdown_report(results: dict) -> str:
     if not has_stage_latencies(results):
         next_steps.append("Use the stage-latency table to identify whether query embedding, vector retrieval, database full-text search, fusion, or reranking is the real bottleneck.")
     next_steps.append("Evaluate `BAAI/bge-reranker-base` as an alternative cross-encoder; it is trained on a broader retrieval corpus and may generalize better to legal text without domain fine-tuning.")
+    next_steps.append("Expand the ground truth to 2-3 relevant chunks per query with graded labels such as exact relevance and partial relevance; this would make Precision@5 and NDCG@10 more discriminating.")
     if not next_steps:
         next_steps.append("Use the category and stage-latency tables above to decide whether hybrid retrieval and reranking justify their added complexity.")
 
@@ -205,7 +252,7 @@ def generate_markdown_report(results: dict) -> str:
 
 def get_stage_detail(stage: str) -> str:
     details = {
-        "query_embedding": "LiteLLM call (Gemini API network call)",
+        "query_embedding": "Embedding lookup/call through LiteLLM provider",
         "dense_retrieval": "ChromaDB query for top-50 vector matches",
         "sparse_retrieval": "PostgreSQL GIN index / ts_rank query for top-50 matches",
         "rrf_fusion": "Reciprocal Rank Fusion blending of result sets",

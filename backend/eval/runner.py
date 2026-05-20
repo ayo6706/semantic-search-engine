@@ -65,6 +65,8 @@ from eval.metrics import precision_at_k, mean_reciprocal_rank, ndcg_at_k
 from eval.generate_test_data import generate_all_test_data
 
 TEST_FILENAMES = ["payment_agreement.pdf", "employment_contract.pdf", "terms_of_service.pdf"]
+EVAL_WARMUP_RUNS = int(os.environ.get("EVAL_WARMUP_RUNS", "1"))
+EVAL_MEASURED_RUNS = int(os.environ.get("EVAL_MEASURED_RUNS", "1"))
 
 async def clean_corpus(session, vector_store):
     """Clean the existing test database and Chroma records to ensure a clean state."""
@@ -184,6 +186,14 @@ async def evaluate_configuration(session, dataset, search_mode, use_reranker):
         session=session,
         cross_encoder=CrossEncoderReranker() if use_reranker else None
     )
+
+    for _ in range(EVAL_WARMUP_RUNS):
+        for item in dataset:
+            await pipeline.execute(
+                query=item["query"],
+                top_k=10,
+                doc_ids=[item["doc_id"]]
+            )
     
     total_latency_ms = 0.0
     
@@ -208,106 +218,101 @@ async def evaluate_configuration(session, dataset, search_mode, use_reranker):
         "reranking": []
     }
     
-    for item in dataset:
-        query = item["query"]
-        relevant = set(item["relevant_chunk_ids"])
-        q_type = item["type"]
-        
-        if search_mode == SearchMode.HYBRID and use_reranker:
-            # Stage-by-stage profiling
-            t0 = time.perf_counter()
-            q_emb = await llm_provider.embed_text(query)
-            t_embed = (time.perf_counter() - t0) * 1000
+    for _ in range(EVAL_MEASURED_RUNS):
+        for item in dataset:
+            query = item["query"]
+            relevant = set(item["relevant_chunk_ids"])
+            q_type = item["type"]
             
-            t0 = time.perf_counter()
-            dense_results = await vector_store.query(embedding=q_emb, top_k=50, doc_ids=[item["doc_id"]])
-            t_dense = (time.perf_counter() - t0) * 1000
-            
-            t0 = time.perf_counter()
-            sparse_results = await chunk_repo.full_text_search(query=query, top_k=50, doc_ids=[item["doc_id"]])
-            t_sparse = (time.perf_counter() - t0) * 1000
-            
-            # Convert results to ScoredChunk lists
-            dense_chunks = []
-            if dense_results and dense_results.get("ids") and dense_results["ids"][0]:
-                ids = dense_results["ids"][0]
-                distances = dense_results["distances"][0]
-                documents = dense_results["documents"][0]
-                metadatas = dense_results["metadatas"][0]
-                for idx in range(len(ids)):
-                    dense_chunks.append(ScoredChunk(
-                        id=ids[idx],
-                        doc_id=metadatas[idx]["doc_id"],
-                        text=documents[idx],
-                        page_num=metadatas[idx]["page_number"],
-                        dense_score=1.0 - distances[idx]
-                    ))
-            
-            sparse_chunks = []
-            for row in sparse_results:
-                sparse_chunks.append(ScoredChunk(
-                    id=row["id"],
-                    doc_id=row["doc_id"],
-                    text=row["text"],
-                    page_num=row["page_number"],
-                    sparse_score=row["rank"]
-                ))
+            if search_mode == SearchMode.HYBRID and use_reranker:
+                t0 = time.perf_counter()
+                q_emb = await llm_provider.embed_text(query)
+                t_embed = (time.perf_counter() - t0) * 1000
                 
-            t0 = time.perf_counter()
-            from app.search.fusers.rrf import RRFFuser
-            fuser = RRFFuser(k=60)
-            fused_results = fuser.fuse([dense_chunks, sparse_chunks])
-            t_fuse = (time.perf_counter() - t0) * 1000
+                t0 = time.perf_counter()
+                dense_results = await vector_store.query(embedding=q_emb, top_k=50, doc_ids=[item["doc_id"]])
+                t_dense = (time.perf_counter() - t0) * 1000
+                
+                t0 = time.perf_counter()
+                sparse_results = await chunk_repo.full_text_search(query=query, top_k=50, doc_ids=[item["doc_id"]])
+                t_sparse = (time.perf_counter() - t0) * 1000
+                
+                dense_chunks = []
+                if dense_results and dense_results.get("ids") and dense_results["ids"][0]:
+                    ids = dense_results["ids"][0]
+                    distances = dense_results["distances"][0]
+                    documents = dense_results["documents"][0]
+                    metadatas = dense_results["metadatas"][0]
+                    for idx in range(len(ids)):
+                        dense_chunks.append(ScoredChunk(
+                            id=ids[idx],
+                            doc_id=metadatas[idx]["doc_id"],
+                            text=documents[idx],
+                            page_num=metadatas[idx]["page_number"],
+                            dense_score=1.0 - distances[idx]
+                        ))
+                
+                sparse_chunks = []
+                for row in sparse_results:
+                    sparse_chunks.append(ScoredChunk(
+                        id=row["id"],
+                        doc_id=row["doc_id"],
+                        text=row["text"],
+                        page_num=row["page_number"],
+                        sparse_score=row["rank"]
+                    ))
+                    
+                t0 = time.perf_counter()
+                from app.search.fusers.rrf import RRFFuser
+                fuser = RRFFuser(k=60)
+                fused_results = fuser.fuse([dense_chunks, sparse_chunks])
+                t_fuse = (time.perf_counter() - t0) * 1000
+                
+                t0 = time.perf_counter()
+                rerank_candidates = fused_results[:20]
+                rerank_results = await pipeline.reranker.rerank(query, rerank_candidates, top_n=10)
+                t_rerank = (time.perf_counter() - t0) * 1000
+                
+                stage_latencies["query_embedding"].append(t_embed)
+                stage_latencies["dense_retrieval"].append(t_dense)
+                stage_latencies["sparse_retrieval"].append(t_sparse)
+                stage_latencies["rrf_fusion"].append(t_fuse)
+                stage_latencies["reranking"].append(t_rerank)
+                
+                results = rerank_results
+                latency = t_embed + max(t_dense, t_sparse) + t_fuse + t_rerank
+                
+            else:
+                start = time.perf_counter()
+                results = await pipeline.execute(
+                    query=query,
+                    top_k=10,
+                    doc_ids=[item["doc_id"]]
+                )
+                latency = (time.perf_counter() - start) * 1000
+                
+            total_latency_ms += latency
+            retrieved_ids = [chunk.id for chunk in results]
             
-            t0 = time.perf_counter()
-            rerank_candidates = fused_results[:20]
-            rerank_results = await pipeline.reranker.rerank(query, rerank_candidates, top_n=10)
-            t_rerank = (time.perf_counter() - t0) * 1000
+            p5 = precision_at_k(retrieved_ids, relevant, k=5)
+            ndcg10 = ndcg_at_k(retrieved_ids, relevant, k=10)
             
-            stage_latencies["query_embedding"].append(t_embed)
-            stage_latencies["dense_retrieval"].append(t_dense)
-            stage_latencies["sparse_retrieval"].append(t_sparse)
-            stage_latencies["rrf_fusion"].append(t_fuse)
-            stage_latencies["reranking"].append(t_rerank)
+            all_retrieved.append(retrieved_ids)
+            all_relevant.append(relevant)
+            all_p5.append(p5)
+            all_ndcg10.append(ndcg10)
             
-            results = rerank_results
-            # Concurrently executing retrievers makes the retrieval step max(t_dense, t_sparse)
-            latency = t_embed + max(t_dense, t_sparse) + t_fuse + t_rerank
-            
-        else:
-            # Direct execution with overall latency tracking
-            start = time.perf_counter()
-            results = await pipeline.execute(
-                query=query,
-                top_k=10,
-                doc_ids=[item["doc_id"]]
-            )
-            latency = (time.perf_counter() - start) * 1000
-            
-        total_latency_ms += latency
-        retrieved_ids = [chunk.id for chunk in results]
-        
-        # Calculate metric values
-        p5 = precision_at_k(retrieved_ids, relevant, k=5)
-        ndcg10 = ndcg_at_k(retrieved_ids, relevant, k=10)
-        
-        # Append to aggregates
-        all_retrieved.append(retrieved_ids)
-        all_relevant.append(relevant)
-        all_p5.append(p5)
-        all_ndcg10.append(ndcg10)
-        
-        # Append to category aggregates
-        if q_type in cat_retrieved:
-            cat_retrieved[q_type].append(retrieved_ids)
-            cat_relevant[q_type].append(relevant)
-            cat_p5[q_type].append(p5)
-            cat_ndcg10[q_type].append(ndcg10)
+            if q_type in cat_retrieved:
+                cat_retrieved[q_type].append(retrieved_ids)
+                cat_relevant[q_type].append(relevant)
+                cat_p5[q_type].append(p5)
+                cat_ndcg10[q_type].append(ndcg10)
             
     avg_mrr = mean_reciprocal_rank(all_retrieved, all_relevant)
     avg_p5 = sum(all_p5) / len(all_p5)
     avg_ndcg10 = sum(all_ndcg10) / len(all_ndcg10)
-    avg_latency = total_latency_ms / len(dataset)
+    measured_query_count = len(dataset) * EVAL_MEASURED_RUNS
+    avg_latency = total_latency_ms / measured_query_count
     
     # Compute per-category MRR
     category_breakdown = {}
@@ -329,7 +334,14 @@ async def evaluate_configuration(session, dataset, search_mode, use_reranker):
         "p5": avg_p5,
         "ndcg10": avg_ndcg10,
         "latency_ms": avg_latency,
-        "category_breakdown": category_breakdown
+        "category_breakdown": category_breakdown,
+        "measurement": {
+            "query_count": len(dataset),
+            "warmup_runs": EVAL_WARMUP_RUNS,
+            "measured_runs": EVAL_MEASURED_RUNS,
+            "measured_query_count": measured_query_count,
+            "latency_ms": "mean per query across measured runs after warm-up"
+        }
     }
     
     if search_mode == SearchMode.HYBRID and use_reranker:
