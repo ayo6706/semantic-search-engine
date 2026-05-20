@@ -1,0 +1,272 @@
+[
+  {
+    "query": "late payment interest rate penalty",
+    "document": "payment_agreement.pdf",
+    "type": "hybrid",
+    "signatures": ["late payment interest rate penalty of 1.5% per month"]
+  },
+  {
+    "query": "billing frequency and schedule",
+    "document": "payment_agreement.pdf",
+    "type": "semantic",
+    "signatures": ["billing frequency and schedule under this agreement shall be strictly monthly"]
+  },
+  {
+    "query": "accepted payment methods wire transfer credit card",
+    "document": "payment_agreement.pdf",
+    "type": "hybrid",
+    "signatures": ["accepted payment methods for any transactions under this Agreement are bank wire transfer"]
+  },
+  {
+    "query": "due date grace period",
+    "document": "payment_agreement.pdf",
+    "type": "semantic",
+    "signatures": ["due date grace period of ten business days"]
+  },
+  {
+    "query": "dispute billing invoice notification deadline",
+    "document": "payment_agreement.pdf",
+    "type": "semantic",
+    "signatures": ["Client disputes any portion of an invoice, they must notify the Provider within 5 business days"]
+  },
+  {
+    "query": "late fee terms $50 charge",
+    "document": "payment_agreement.pdf",
+    "type": "keyword",
+    "signatures": ["flat late fee terms of $50 will be charged"]
+  },
+  {
+    "query": "payment schedule installments monthly invoice",
+    "document": "payment_agreement.pdf",
+    "type": "semantic",
+    "signatures": ["Invoices will be generated and delivered to the client on the first day of each calendar month"]
+  },
+  {
+    "query": "bank wire transfer details",
+    "document": "payment_agreement.pdf",
+    "type": "keyword",
+    "signatures": ["accepted payment methods for any transactions under this Agreement are bank wire transfer"]
+  },
+  {
+    "query": "consequences of non-payment or overdue",
+    "document": "payment_agreement.pdf",
+    "type": "semantic",
+    "signatures": ["overdue", "late payment interest rate penalty"]
+  },
+  {
+    "query": "currency of payment USD EUR cash not accepted",
+    "document": "payment_agreement.pdf",
+    "type": "hybrid",
+    "signatures": ["Cash payments are explicitly not accepted"]
+  },
+  {
+    "query": "payment terms Article 4.2",
+    "document": "payment_agreement.pdf",
+    "type": "keyword",
+    "signatures": ["Article 4.2: Late Payment Penalty and Fees"]
+  },
+  {
+    "query": "electronic invoice delivery email address",
+    "document": "payment_agreement.pdf",
+    "type": "semantic",
+    "signatures": ["electronic invoice delivery email"]
+  },
+  {
+    "query": "refund policy for prepaid services limit",
+    "document": "payment_agreement.pdf",
+    "type": "semantic",
+    "signatures": ["refund policy for prepaid services specifies that refunds are only available if requested within 14 days"]
+  },
+  {
+    "query": "early payment discount percentage",
+    "document": "payment_agreement.pdf",
+    "type": "hybrid",
+    "signatures": ["early payment discount of 2% is offered"]
+  },
+  {
+    "query": "payment security requirements and transactions",
+    "document": "payment_agreement.pdf",
+    "type": "semantic",
+    "signatures": ["accepted payment methods for any transactions"]
+  },
+  {
+    "query": "termination notice period requirements",
+    "document": "employment_contract.pdf",
+    "type": "hybrid",
+    "signatures": ["termination notice period requirements state that either party may terminate this agreement by giving 30 days written notice"]
+  },
+  {
+    "query": "intellectual property rights and ownership assignment",
+    "document": "employment_contract.pdf",
+    "type": "semantic",
+    "signatures": ["intellectual property rights and ownership assignment of work created during employment belong solely to the Employer"]
+  },
+  {
+    "query": "confidentiality duration and obligations",
+    "document": "employment_contract.pdf",
+    "type": "semantic",
+    "signatures": ["confidentiality duration and obligations shall survive termination for a period of five years"]
+  },
+  {
+    "query": "standard weekly working hours limit",
+    "document": "employment_contract.pdf",
+    "type": "hybrid",
+    "signatures": ["standard weekly working hours shall be exactly forty hours per week"]
+  },
+  {
+    "query": "annual leave entitlement paid time off days",
+    "document": "employment_contract.pdf",
+    "type": "semantic",
+    "signatures": ["annual leave entitlement paid time off is 25 days"]
+  },
+  {
+    "query": "probationary period duration limit",
+    "document": "employment_contract.pdf",
+    "type": "hybrid",
+    "signatures": ["initial probationary period duration is set to six months"]
+  },
+  {
+    "query": "non-compete restriction geographical radius",
+    "document": "employment_contract.pdf",
+    "type": "hybrid",
+    "signatures": ["EMPLOYMENT CONTRACT"]
+  },
+  {
+    "query": "sick leave notice and doctor note deadline",
+    "document": "employment_contract.pdf",
+    "type": "semantic",
+    "signatures": ["sick leave notice and doctor note, the employee must notify their manager by 9:00 AM"]
+  },
+  {
+    "query": "overtime compensation rate extra pay",
+    "document": "employment_contract.pdf",
+    "type": "keyword",
+    "signatures": ["standard weekly working hours"]
+  },
+  {
+    "query": "bonus eligibility criteria target",
+    "document": "employment_contract.pdf",
+    "type": "semantic",
+    "signatures": ["EMPLOYMENT CONTRACT"]
+  },
+  {
+    "query": "maternity and paternity leave policy",
+    "document": "employment_contract.pdf",
+    "type": "semantic",
+    "signatures": ["Article 6: Termination, Sick Leave, and Benefits"]
+  },
+  {
+    "query": "equipment return upon separation termination",
+    "document": "employment_contract.pdf",
+    "type": "semantic",
+    "signatures": ["Article 6: Termination, Sick Leave, and Benefits"]
+  },
+  {
+    "query": "monthly base salary payment date",
+    "document": "employment_contract.pdf",
+    "type": "semantic",
+    "signatures": ["monthly base salary payment date is the 25th day"]
+  },
+  {
+    "query": "conflict of interest disclosure",
+    "document": "employment_contract.pdf",
+    "type": "semantic",
+    "signatures": ["Article 5: Intellectual Property and Non-Disclosure"]
+  },
+  {
+    "query": "severance pay calculation years of service",
+    "document": "employment_contract.pdf",
+    "type": "semantic",
+    "signatures": ["Article 6: Termination, Sick Leave, and Benefits"]
+  },
+  {
+    "query": "limitation of liability maximum cap",
+    "document": "terms_of_service.pdf",
+    "type": "hybrid",
+    "signatures": ["limitation of liability maximum cap is strictly limited to the total fees paid"]
+  },
+  {
+    "query": "governing law state of New York jurisdiction",
+    "document": "terms_of_service.pdf",
+    "type": "hybrid",
+    "signatures": ["governing law state of New York shall govern"]
+  },
+  {
+    "query": "account suspension and termination conditions",
+    "document": "terms_of_service.pdf",
+    "type": "semantic",
+    "signatures": ["account suspension and termination conditions allow the platform to suspend"]
+  },
+  {
+    "query": "Article 7.3 specifications exclusions",
+    "document": "terms_of_service.pdf",
+    "type": "keyword",
+    "signatures": ["Article 7.3 specifications: Under no circumstances shall the platform be liable"]
+  },
+  {
+    "query": "dispute resolution binding arbitration process",
+    "document": "terms_of_service.pdf",
+    "type": "semantic",
+    "signatures": ["dispute resolution binding arbitration process will be handled by the American Arbitration Association"]
+  },
+  {
+    "query": "user content license grant to platform rights",
+    "document": "terms_of_service.pdf",
+    "type": "semantic",
+    "signatures": ["TERMS OF SERVICE"]
+  },
+  {
+    "query": "privacy policy incorporation terms",
+    "document": "terms_of_service.pdf",
+    "type": "semantic",
+    "signatures": ["TERMS OF SERVICE"]
+  },
+  {
+    "query": "acceptable use policy prohibited activities content",
+    "document": "terms_of_service.pdf",
+    "type": "semantic",
+    "signatures": ["violates our acceptable use policy prohibited activities"]
+  },
+  {
+    "query": "minimum age requirement to use service limits",
+    "document": "terms_of_service.pdf",
+    "type": "hybrid",
+    "signatures": ["minimum age requirement to use service is eighteen years old"]
+  },
+  {
+    "query": "indemnification obligations of the user",
+    "document": "terms_of_service.pdf",
+    "type": "semantic",
+    "signatures": ["Article 7: Limitation of Liability and Indemnification"]
+  },
+  {
+    "query": "class action waiver in arbitration clause",
+    "document": "terms_of_service.pdf",
+    "type": "hybrid",
+    "signatures": ["class action waiver in arbitration, meaning all disputes must be resolved"]
+  },
+  {
+    "query": "force majeure clause excuses delay performance",
+    "document": "terms_of_service.pdf",
+    "type": "semantic",
+    "signatures": ["force majeure clause excuses performance delays"]
+  },
+  {
+    "query": "severability of invalid provisions parts",
+    "document": "terms_of_service.pdf",
+    "type": "semantic",
+    "signatures": ["Article 7.3: Specific Exclusions"]
+  },
+  {
+    "query": "modification of terms notification updates",
+    "document": "terms_of_service.pdf",
+    "type": "semantic",
+    "signatures": ["TERMS OF SERVICE"]
+  },
+  {
+    "query": "trademark and copyright ownership platform assets",
+    "document": "terms_of_service.pdf",
+    "type": "semantic",
+    "signatures": ["TERMS OF SERVICE"]
+  }
+]

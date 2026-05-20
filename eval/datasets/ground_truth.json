@@ -1,0 +1,362 @@
+[
+  {
+    "query": "late payment interest rate penalty",
+    "type": "hybrid",
+    "doc_id": "1f1ef698-cd4e-4b44-8f31-11f762dbb402",
+    "relevant_chunk_ids": [
+      "2da349e5-fcb6-5511-a4fb-7b19bbe96f18"
+    ]
+  },
+  {
+    "query": "billing frequency and schedule",
+    "type": "semantic",
+    "doc_id": "1f1ef698-cd4e-4b44-8f31-11f762dbb402",
+    "relevant_chunk_ids": [
+      "ec0dee04-5334-5146-b219-7a96bc8efa44"
+    ]
+  },
+  {
+    "query": "accepted payment methods wire transfer credit card",
+    "type": "hybrid",
+    "doc_id": "1f1ef698-cd4e-4b44-8f31-11f762dbb402",
+    "relevant_chunk_ids": [
+      "ec0dee04-5334-5146-b219-7a96bc8efa44"
+    ]
+  },
+  {
+    "query": "due date grace period",
+    "type": "semantic",
+    "doc_id": "1f1ef698-cd4e-4b44-8f31-11f762dbb402",
+    "relevant_chunk_ids": [
+      "2da349e5-fcb6-5511-a4fb-7b19bbe96f18"
+    ]
+  },
+  {
+    "query": "dispute billing invoice notification deadline",
+    "type": "semantic",
+    "doc_id": "1f1ef698-cd4e-4b44-8f31-11f762dbb402",
+    "relevant_chunk_ids": [
+      "dc6a2440-2df0-5ce4-ad3e-2c24e6f5ed76"
+    ]
+  },
+  {
+    "query": "late fee terms $50 charge",
+    "type": "keyword",
+    "doc_id": "1f1ef698-cd4e-4b44-8f31-11f762dbb402",
+    "relevant_chunk_ids": [
+      "2da349e5-fcb6-5511-a4fb-7b19bbe96f18"
+    ]
+  },
+  {
+    "query": "payment schedule installments monthly invoice",
+    "type": "semantic",
+    "doc_id": "1f1ef698-cd4e-4b44-8f31-11f762dbb402",
+    "relevant_chunk_ids": [
+      "ec0dee04-5334-5146-b219-7a96bc8efa44"
+    ]
+  },
+  {
+    "query": "bank wire transfer details",
+    "type": "keyword",
+    "doc_id": "1f1ef698-cd4e-4b44-8f31-11f762dbb402",
+    "relevant_chunk_ids": [
+      "ec0dee04-5334-5146-b219-7a96bc8efa44"
+    ]
+  },
+  {
+    "query": "consequences of non-payment or overdue",
+    "type": "semantic",
+    "doc_id": "1f1ef698-cd4e-4b44-8f31-11f762dbb402",
+    "relevant_chunk_ids": [
+      "2da349e5-fcb6-5511-a4fb-7b19bbe96f18"
+    ]
+  },
+  {
+    "query": "currency of payment USD EUR cash not accepted",
+    "type": "hybrid",
+    "doc_id": "1f1ef698-cd4e-4b44-8f31-11f762dbb402",
+    "relevant_chunk_ids": [
+      "ec0dee04-5334-5146-b219-7a96bc8efa44"
+    ]
+  },
+  {
+    "query": "payment terms Article 4.2",
+    "type": "keyword",
+    "doc_id": "1f1ef698-cd4e-4b44-8f31-11f762dbb402",
+    "relevant_chunk_ids": [
+      "2da349e5-fcb6-5511-a4fb-7b19bbe96f18"
+    ]
+  },
+  {
+    "query": "electronic invoice delivery email address",
+    "type": "semantic",
+    "doc_id": "1f1ef698-cd4e-4b44-8f31-11f762dbb402",
+    "relevant_chunk_ids": [
+      "dc6a2440-2df0-5ce4-ad3e-2c24e6f5ed76"
+    ]
+  },
+  {
+    "query": "refund policy for prepaid services limit",
+    "type": "semantic",
+    "doc_id": "1f1ef698-cd4e-4b44-8f31-11f762dbb402",
+    "relevant_chunk_ids": [
+      "dc6a2440-2df0-5ce4-ad3e-2c24e6f5ed76"
+    ]
+  },
+  {
+    "query": "early payment discount percentage",
+    "type": "hybrid",
+    "doc_id": "1f1ef698-cd4e-4b44-8f31-11f762dbb402",
+    "relevant_chunk_ids": [
+      "dc6a2440-2df0-5ce4-ad3e-2c24e6f5ed76"
+    ]
+  },
+  {
+    "query": "payment security requirements and transactions",
+    "type": "semantic",
+    "doc_id": "1f1ef698-cd4e-4b44-8f31-11f762dbb402",
+    "relevant_chunk_ids": [
+      "ec0dee04-5334-5146-b219-7a96bc8efa44"
+    ]
+  },
+  {
+    "query": "termination notice period requirements",
+    "type": "hybrid",
+    "doc_id": "0b31c70c-9506-45d8-a9a7-aa5f0d3a98fb",
+    "relevant_chunk_ids": [
+      "45278669-1f00-55a7-9346-8ec0884f4f1e"
+    ]
+  },
+  {
+    "query": "intellectual property rights and ownership assignment",
+    "type": "semantic",
+    "doc_id": "0b31c70c-9506-45d8-a9a7-aa5f0d3a98fb",
+    "relevant_chunk_ids": [
+      "48dbb026-7648-5b85-b620-21c3aaa0fa84"
+    ]
+  },
+  {
+    "query": "confidentiality duration and obligations",
+    "type": "semantic",
+    "doc_id": "0b31c70c-9506-45d8-a9a7-aa5f0d3a98fb",
+    "relevant_chunk_ids": [
+      "48dbb026-7648-5b85-b620-21c3aaa0fa84"
+    ]
+  },
+  {
+    "query": "standard weekly working hours limit",
+    "type": "hybrid",
+    "doc_id": "0b31c70c-9506-45d8-a9a7-aa5f0d3a98fb",
+    "relevant_chunk_ids": [
+      "80eb697b-82cc-5274-b133-9722ebad6e5b"
+    ]
+  },
+  {
+    "query": "annual leave entitlement paid time off days",
+    "type": "semantic",
+    "doc_id": "0b31c70c-9506-45d8-a9a7-aa5f0d3a98fb",
+    "relevant_chunk_ids": [
+      "45278669-1f00-55a7-9346-8ec0884f4f1e"
+    ]
+  },
+  {
+    "query": "probationary period duration limit",
+    "type": "hybrid",
+    "doc_id": "0b31c70c-9506-45d8-a9a7-aa5f0d3a98fb",
+    "relevant_chunk_ids": [
+      "80eb697b-82cc-5274-b133-9722ebad6e5b"
+    ]
+  },
+  {
+    "query": "non-compete restriction geographical radius",
+    "type": "hybrid",
+    "doc_id": "0b31c70c-9506-45d8-a9a7-aa5f0d3a98fb",
+    "relevant_chunk_ids": [
+      "80eb697b-82cc-5274-b133-9722ebad6e5b"
+    ]
+  },
+  {
+    "query": "sick leave notice and doctor note deadline",
+    "type": "semantic",
+    "doc_id": "0b31c70c-9506-45d8-a9a7-aa5f0d3a98fb",
+    "relevant_chunk_ids": [
+      "45278669-1f00-55a7-9346-8ec0884f4f1e"
+    ]
+  },
+  {
+    "query": "overtime compensation rate extra pay",
+    "type": "keyword",
+    "doc_id": "0b31c70c-9506-45d8-a9a7-aa5f0d3a98fb",
+    "relevant_chunk_ids": [
+      "80eb697b-82cc-5274-b133-9722ebad6e5b"
+    ]
+  },
+  {
+    "query": "bonus eligibility criteria target",
+    "type": "semantic",
+    "doc_id": "0b31c70c-9506-45d8-a9a7-aa5f0d3a98fb",
+    "relevant_chunk_ids": [
+      "80eb697b-82cc-5274-b133-9722ebad6e5b"
+    ]
+  },
+  {
+    "query": "maternity and paternity leave policy",
+    "type": "semantic",
+    "doc_id": "0b31c70c-9506-45d8-a9a7-aa5f0d3a98fb",
+    "relevant_chunk_ids": [
+      "45278669-1f00-55a7-9346-8ec0884f4f1e"
+    ]
+  },
+  {
+    "query": "equipment return upon separation termination",
+    "type": "semantic",
+    "doc_id": "0b31c70c-9506-45d8-a9a7-aa5f0d3a98fb",
+    "relevant_chunk_ids": [
+      "45278669-1f00-55a7-9346-8ec0884f4f1e"
+    ]
+  },
+  {
+    "query": "monthly base salary payment date",
+    "type": "semantic",
+    "doc_id": "0b31c70c-9506-45d8-a9a7-aa5f0d3a98fb",
+    "relevant_chunk_ids": [
+      "80eb697b-82cc-5274-b133-9722ebad6e5b"
+    ]
+  },
+  {
+    "query": "conflict of interest disclosure",
+    "type": "semantic",
+    "doc_id": "0b31c70c-9506-45d8-a9a7-aa5f0d3a98fb",
+    "relevant_chunk_ids": [
+      "48dbb026-7648-5b85-b620-21c3aaa0fa84"
+    ]
+  },
+  {
+    "query": "severance pay calculation years of service",
+    "type": "semantic",
+    "doc_id": "0b31c70c-9506-45d8-a9a7-aa5f0d3a98fb",
+    "relevant_chunk_ids": [
+      "45278669-1f00-55a7-9346-8ec0884f4f1e"
+    ]
+  },
+  {
+    "query": "limitation of liability maximum cap",
+    "type": "hybrid",
+    "doc_id": "9d66230e-a0c0-4b98-9c50-f505b9f59a76",
+    "relevant_chunk_ids": [
+      "979d3630-8e10-584b-950b-cbdb2ee59fd3"
+    ]
+  },
+  {
+    "query": "governing law state of New York jurisdiction",
+    "type": "hybrid",
+    "doc_id": "9d66230e-a0c0-4b98-9c50-f505b9f59a76",
+    "relevant_chunk_ids": [
+      "979d3630-8e10-584b-950b-cbdb2ee59fd3"
+    ]
+  },
+  {
+    "query": "account suspension and termination conditions",
+    "type": "semantic",
+    "doc_id": "9d66230e-a0c0-4b98-9c50-f505b9f59a76",
+    "relevant_chunk_ids": [
+      "8c3f84c1-ffb1-54b2-912e-ae9da9b7a5ee"
+    ]
+  },
+  {
+    "query": "Article 7.3 specifications exclusions",
+    "type": "keyword",
+    "doc_id": "9d66230e-a0c0-4b98-9c50-f505b9f59a76",
+    "relevant_chunk_ids": [
+      "65b745b9-5561-5333-a54d-a9daf33271e5"
+    ]
+  },
+  {
+    "query": "dispute resolution binding arbitration process",
+    "type": "semantic",
+    "doc_id": "9d66230e-a0c0-4b98-9c50-f505b9f59a76",
+    "relevant_chunk_ids": [
+      "979d3630-8e10-584b-950b-cbdb2ee59fd3"
+    ]
+  },
+  {
+    "query": "user content license grant to platform rights",
+    "type": "semantic",
+    "doc_id": "9d66230e-a0c0-4b98-9c50-f505b9f59a76",
+    "relevant_chunk_ids": [
+      "8c3f84c1-ffb1-54b2-912e-ae9da9b7a5ee"
+    ]
+  },
+  {
+    "query": "privacy policy incorporation terms",
+    "type": "semantic",
+    "doc_id": "9d66230e-a0c0-4b98-9c50-f505b9f59a76",
+    "relevant_chunk_ids": [
+      "8c3f84c1-ffb1-54b2-912e-ae9da9b7a5ee"
+    ]
+  },
+  {
+    "query": "acceptable use policy prohibited activities content",
+    "type": "semantic",
+    "doc_id": "9d66230e-a0c0-4b98-9c50-f505b9f59a76",
+    "relevant_chunk_ids": [
+      "8c3f84c1-ffb1-54b2-912e-ae9da9b7a5ee"
+    ]
+  },
+  {
+    "query": "minimum age requirement to use service limits",
+    "type": "hybrid",
+    "doc_id": "9d66230e-a0c0-4b98-9c50-f505b9f59a76",
+    "relevant_chunk_ids": [
+      "8c3f84c1-ffb1-54b2-912e-ae9da9b7a5ee"
+    ]
+  },
+  {
+    "query": "indemnification obligations of the user",
+    "type": "semantic",
+    "doc_id": "9d66230e-a0c0-4b98-9c50-f505b9f59a76",
+    "relevant_chunk_ids": [
+      "979d3630-8e10-584b-950b-cbdb2ee59fd3"
+    ]
+  },
+  {
+    "query": "class action waiver in arbitration clause",
+    "type": "hybrid",
+    "doc_id": "9d66230e-a0c0-4b98-9c50-f505b9f59a76",
+    "relevant_chunk_ids": [
+      "65b745b9-5561-5333-a54d-a9daf33271e5"
+    ]
+  },
+  {
+    "query": "force majeure clause excuses delay performance",
+    "type": "semantic",
+    "doc_id": "9d66230e-a0c0-4b98-9c50-f505b9f59a76",
+    "relevant_chunk_ids": [
+      "65b745b9-5561-5333-a54d-a9daf33271e5"
+    ]
+  },
+  {
+    "query": "severability of invalid provisions parts",
+    "type": "semantic",
+    "doc_id": "9d66230e-a0c0-4b98-9c50-f505b9f59a76",
+    "relevant_chunk_ids": [
+      "65b745b9-5561-5333-a54d-a9daf33271e5"
+    ]
+  },
+  {
+    "query": "modification of terms notification updates",
+    "type": "semantic",
+    "doc_id": "9d66230e-a0c0-4b98-9c50-f505b9f59a76",
+    "relevant_chunk_ids": [
+      "8c3f84c1-ffb1-54b2-912e-ae9da9b7a5ee"
+    ]
+  },
+  {
+    "query": "trademark and copyright ownership platform assets",
+    "type": "semantic",
+    "doc_id": "9d66230e-a0c0-4b98-9c50-f505b9f59a76",
+    "relevant_chunk_ids": [
+      "8c3f84c1-ffb1-54b2-912e-ae9da9b7a5ee"
+    ]
+  }
+]
