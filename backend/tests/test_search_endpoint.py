@@ -14,7 +14,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 @pytest.mark.asyncio
 @patch("app.api.v1.endpoints.search.SearchCacheService")
-@patch("app.api.v1.endpoints.search.get_redis_client")
 @patch("app.api.v1.endpoints.search.get_cross_encoder")
 @patch("app.api.v1.endpoints.search.build_pipeline")
 @patch("app.api.v1.endpoints.search.DocumentRepository")
@@ -22,7 +21,6 @@ async def test_search_response_includes_latency_and_metadata(
     mock_doc_repo_class,
     mock_build_pipeline,
     mock_get_cross_encoder,
-    mock_get_redis,
     mock_cache_class,
 ):
     # Mock cache to miss
@@ -50,7 +48,8 @@ async def test_search_response_includes_latency_and_metadata(
     cross_encoder = object()
     mock_get_cross_encoder.return_value = cross_encoder
     
-    response = await search(request, session, llm, vs)
+    mock_redis = AsyncMock()
+    response = await search(request, session, mock_redis, llm, vs)
     
     assert response.query == "test"
     assert response.total_results == 1
@@ -74,13 +73,11 @@ async def test_search_response_includes_latency_and_metadata(
 
 @pytest.mark.asyncio
 @patch("app.api.v1.endpoints.search.SearchCacheService")
-@patch("app.api.v1.endpoints.search.get_redis_client")
 @patch("app.api.v1.endpoints.search.get_cross_encoder")
 @patch("app.api.v1.endpoints.search.build_pipeline")
 async def test_search_cache_hit_skips_pipeline_and_cross_encoder(
     mock_build_pipeline,
     mock_get_cross_encoder,
-    mock_get_redis,
     mock_cache_class,
 ):
     cached_response = SearchResponse(
@@ -100,7 +97,8 @@ async def test_search_cache_hit_skips_pipeline_and_cross_encoder(
     llm = AsyncMock(spec=LiteLLMProvider)
     vs = AsyncMock(spec=ChromaDBVectorStore)
 
-    response = await search(request, session, llm, vs)
+    mock_redis = AsyncMock()
+    response = await search(request, session, mock_redis, llm, vs)
 
     assert response is cached_response
     mock_get_cross_encoder.assert_not_awaited()
@@ -110,7 +108,6 @@ async def test_search_cache_hit_skips_pipeline_and_cross_encoder(
 
 @pytest.mark.asyncio
 @patch("app.api.v1.endpoints.search.SearchCacheService")
-@patch("app.api.v1.endpoints.search.get_redis_client")
 @patch("app.api.v1.endpoints.search.get_cross_encoder")
 @patch("app.api.v1.endpoints.search.build_pipeline")
 @patch("app.api.v1.endpoints.search.DocumentRepository")
@@ -118,7 +115,6 @@ async def test_search_without_reranker_does_not_load_cross_encoder(
     mock_doc_repo_class,
     mock_build_pipeline,
     mock_get_cross_encoder,
-    mock_get_redis,
     mock_cache_class,
 ):
     mock_cache = AsyncMock()
@@ -138,7 +134,8 @@ async def test_search_without_reranker_does_not_load_cross_encoder(
     llm = AsyncMock(spec=LiteLLMProvider)
     vs = AsyncMock(spec=ChromaDBVectorStore)
 
-    response = await search(request, session, llm, vs)
+    mock_redis = AsyncMock()
+    response = await search(request, session, mock_redis, llm, vs)
 
     assert response.reranker_used is False
     mock_get_cross_encoder.assert_not_awaited()
@@ -148,7 +145,6 @@ async def test_search_without_reranker_does_not_load_cross_encoder(
 
 @pytest.mark.asyncio
 @patch("app.api.v1.endpoints.search.SearchCacheService")
-@patch("app.api.v1.endpoints.search.get_redis_client")
 @patch("app.api.v1.endpoints.search.get_cross_encoder")
 @patch("app.api.v1.endpoints.search.build_pipeline")
 @patch("app.api.v1.endpoints.search.DocumentRepository")
@@ -156,7 +152,6 @@ async def test_search_falls_back_when_reranker_fails_to_load(
     mock_doc_repo_class,
     mock_build_pipeline,
     mock_get_cross_encoder,
-    mock_get_redis,
     mock_cache_class,
 ):
     mock_cache = AsyncMock()
@@ -191,7 +186,8 @@ async def test_search_falls_back_when_reranker_fails_to_load(
     llm = AsyncMock(spec=LiteLLMProvider)
     vs = AsyncMock(spec=ChromaDBVectorStore)
 
-    response = await search(request, session, llm, vs)
+    mock_redis = AsyncMock()
+    response = await search(request, session, mock_redis, llm, vs)
 
     assert response.reranker_used is False
     assert response.total_results == 1

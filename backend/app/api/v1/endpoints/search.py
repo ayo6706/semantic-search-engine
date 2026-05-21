@@ -11,7 +11,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 
 from app.core.database import DbSessionDep
-from app.core.redis import get_redis_client
+from app.core.redis import RedisDep
 from app.integrations.llm.litellm import LiteLLMProvider
 from app.integrations.vectorstores.chroma import ChromaDBVectorStore
 from app.repositories.document import DocumentRepository
@@ -63,6 +63,7 @@ def get_vector_store() -> ChromaDBVectorStore:
 async def search(
     request: SearchRequest,
     session: DbSessionDep,
+    redis_client: RedisDep,
     llm_provider: Annotated[LiteLLMProvider, Depends(get_llm_provider)],
     vector_store: Annotated[ChromaDBVectorStore, Depends(get_vector_store)],
 ) -> SearchResponse:
@@ -70,7 +71,7 @@ async def search(
 
     cache: SearchCacheService | None = None
     try:
-        cache = SearchCacheService(await get_redis_client())
+        cache = SearchCacheService(redis_client)
         cached_response = await cache.get(request)
         if cached_response is not None:
             return cached_response

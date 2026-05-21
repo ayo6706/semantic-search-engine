@@ -5,12 +5,23 @@ from __future__ import annotations
 import asyncio
 import logging
 
+from typing import Annotated
+
+from fastapi import Depends, Request
 import redis.asyncio as redis
 from redis.exceptions import RedisError
 
 from app.core.config import infra_settings
 
 logger = logging.getLogger(__name__)
+
+async def get_redis(request: Request) -> redis.Redis:
+    """Dependency to get the lifespan-managed Redis client."""
+    return request.app.state.redis_client
+
+
+RedisDep = Annotated[redis.Redis, Depends(get_redis)]
+
 
 _redis_client: redis.Redis | None = None
 _redis_lock = asyncio.Lock()

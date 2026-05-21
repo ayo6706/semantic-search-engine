@@ -10,7 +10,7 @@ from app.repositories.document import DocumentRepository
 from app.services.document import DocumentService
 from app.schemas.document import DocumentResponse, DocumentListResponse
 from app.core.config import infra_settings
-from app.core.redis import get_redis_client
+from app.core.redis import RedisDep
 from app.integrations.vectorstores.chroma import ChromaDBVectorStore
 from app.services.cache import SearchCacheService
 
@@ -84,6 +84,7 @@ async def get_document(
 async def delete_document(
     doc_id: uuid.UUID,
     session: DbSessionDep,
+    redis_client: RedisDep,
     vector_store: Annotated[ChromaDBVectorStore, Depends(get_vector_store)],
 ) -> None:
     """Delete a document and all its chunks from the database and vector store."""
@@ -126,7 +127,7 @@ async def delete_document(
             os.remove(file_path)
 
     try:
-        cache = SearchCacheService(await get_redis_client())
+        cache = SearchCacheService(redis_client)
         await cache.invalidate_all()
     except Exception:
         logger.exception("Cache invalidation failed after deleting document %s", doc_id)

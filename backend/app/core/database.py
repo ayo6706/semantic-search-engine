@@ -9,7 +9,7 @@ from __future__ import annotations
 from collections.abc import AsyncGenerator
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
@@ -29,17 +29,23 @@ async_session_factory = async_sessionmaker(
 )
 
 
-async def get_db() -> AsyncGenerator[AsyncSession, None]:
+async def get_db(request: Request) -> AsyncGenerator[AsyncSession, None]:
     """Yield an async database session.
 
-    The session is automatically closed when the request finishes.
-    Callers are responsible for committing or rolling back as needed.
+    If the app state has a lifespan-managed session factory, it uses that.
+    Otherwise, falls back to the default.
 
     Yields:
         An async SQLAlchemy session.
     """
-    async with async_session_factory() as session:
+    if hasattr(request.app.state, "db_session_factory"):
+        factory = request.app.state.db_session_factory
+    else:
+        factory = async_session_factory
+
+    async with factory() as session:
         yield session
 
 
 DbSessionDep = Annotated[AsyncSession, Depends(get_db)]
+
