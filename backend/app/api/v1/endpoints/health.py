@@ -14,6 +14,10 @@ from fastapi import APIRouter, status
 
 from app.core import health
 from app.core.database import DbSessionDep
+from app.api.dependencies import get_vector_store
+from app.integrations.vectorstores.chroma import ChromaDBVectorStore
+from typing import Annotated
+from fastapi import Depends
 
 logger = logging.getLogger(__name__)
 
@@ -26,18 +30,22 @@ router = APIRouter(prefix="/health", tags=["health"])
     description="Checks connectivity to PostgreSQL, ChromaDB, and Redis.",
     status_code=status.HTTP_200_OK,
 )
-async def health_check(db: DbSessionDep) -> dict[str, Any]:
+async def health_check(
+    db: DbSessionDep,
+    vector_store: Annotated[ChromaDBVectorStore, Depends(get_vector_store)],
+) -> dict[str, Any]:
     """Check health of all infrastructure services.
 
     Args:
         db: Async database session injected by FastAPI.
+        vector_store: Instantiated ChromaDBVectorStore dependency.
 
     Returns:
         A dict with overall status and per-service status details.
     """
     postgres_task = health.check_postgres(db)
     redis_task = health.check_redis()
-    chroma_task = health.check_chromadb()
+    chroma_task = health.check_chromadb(vector_store)
 
     postgres_health, redis_health, chroma_health = await asyncio.gather(
         postgres_task, redis_task, chroma_task
