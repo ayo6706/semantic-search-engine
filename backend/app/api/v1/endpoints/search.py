@@ -2,68 +2,31 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
-import threading
 import time
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
+from app.api.dependencies import get_cross_encoder, get_llm_provider, get_vector_store
 from app.core.database import DbSessionDep
-from app.core.redis import RedisDep
+from app.core.redis import get_redis_client
 from app.integrations.llm.litellm import LiteLLMProvider
 from app.integrations.vectorstores.chroma import ChromaDBVectorStore
 from app.repositories.document import DocumentRepository
 from app.schemas.search import SearchRequest, SearchResponse, SearchResult
 from app.search.factory import build_pipeline
-from app.search.rerankers.cross_encoder import CrossEncoderReranker
 from app.search.snippet import extract_snippet
 from app.services.cache import SearchCacheService
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-# Singleton dependencies — create once, inject many
-_cross_encoder: CrossEncoderReranker | None = None
-_cross_encoder_lock = asyncio.Lock()
-_llm_provider: LiteLLMProvider | None = None
-_vector_store: ChromaDBVectorStore | None = None
-_provider_lock = threading.Lock()
-
-
-async def get_cross_encoder() -> CrossEncoderReranker:
-    global _cross_encoder
-    if _cross_encoder is None:
-        async with _cross_encoder_lock:
-            if _cross_encoder is None:
-                _cross_encoder = await asyncio.to_thread(CrossEncoderReranker)
-    return _cross_encoder
-
-
-def get_llm_provider() -> LiteLLMProvider:
-    global _llm_provider
-    if _llm_provider is None:
-        with _provider_lock:
-            if _llm_provider is None:
-                _llm_provider = LiteLLMProvider()
-    return _llm_provider
-
-
-def get_vector_store() -> ChromaDBVectorStore:
-    global _vector_store
-    if _vector_store is None:
-        with _provider_lock:
-            if _vector_store is None:
-                _vector_store = ChromaDBVectorStore()
-    return _vector_store
-
 
 @router.post("", response_model=SearchResponse)
 async def search(
     request: SearchRequest,
     session: DbSessionDep,
-    redis_client: RedisDep,
     llm_provider: Annotated[LiteLLMProvider, Depends(get_llm_provider)],
     vector_store: Annotated[ChromaDBVectorStore, Depends(get_vector_store)],
 ) -> SearchResponse:
@@ -71,7 +34,7 @@ async def search(
 
     cache: SearchCacheService | None = None
     try:
-        cache = SearchCacheService(redis_client)
+        cache = SearchCacheService(await get_redis_client())
         cached_response = await cache.get(request)
         if cached_response is not None:
             return cached_response
