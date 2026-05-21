@@ -5,29 +5,18 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 
+from app.api.dependencies import get_document_service, get_vector_store, get_document_repository
 from app.core.database import DbSessionDep
 from app.repositories.document import DocumentRepository
 from app.services.document import DocumentService
 from app.schemas.document import DocumentResponse, DocumentListResponse
 from app.core.config import infra_settings
-from app.core.redis import RedisDep
+from app.core.redis import get_redis_client
 from app.integrations.vectorstores.chroma import ChromaDBVectorStore
 from app.services.cache import SearchCacheService
 
-
 router = APIRouter()
 logger = logging.getLogger(__name__)
-
-
-async def get_document_service(session: DbSessionDep) -> DocumentService:
-    """Dependency for DocumentService."""
-    repo = DocumentRepository(session)
-    return DocumentService(repo)
-
-
-async def get_vector_store() -> ChromaDBVectorStore:
-    """Dependency for ChromaDB vector store operations."""
-    return ChromaDBVectorStore()
 
 
 @router.post("", response_model=DocumentResponse)
@@ -56,10 +45,9 @@ async def upload_document(
 
 @router.get("", response_model=DocumentListResponse)
 async def list_documents(
-    session: DbSessionDep
+    repo: Annotated[DocumentRepository, Depends(get_document_repository)],
 ) -> DocumentListResponse:
     """List all documents."""
-    repo = DocumentRepository(session)
     docs, total = await repo.list_documents()
     return DocumentListResponse(
         items=[DocumentResponse.model_validate(d) for d in docs],
@@ -70,10 +58,9 @@ async def list_documents(
 @router.get("/{doc_id}", response_model=DocumentResponse)
 async def get_document(
     doc_id: uuid.UUID,
-    session: DbSessionDep
+    repo: Annotated[DocumentRepository, Depends(get_document_repository)],
 ) -> DocumentResponse:
     """Get a document's status by ID."""
-    repo = DocumentRepository(session)
     doc = await repo.get_by_id(doc_id)
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found.")
@@ -84,7 +71,6 @@ async def get_document(
 async def delete_document(
     doc_id: uuid.UUID,
     session: DbSessionDep,
-    redis_client: RedisDep,
     vector_store: Annotated[ChromaDBVectorStore, Depends(get_vector_store)],
 ) -> None:
     """Delete a document and all its chunks from the database and vector store."""
@@ -127,7 +113,7 @@ async def delete_document(
             os.remove(file_path)
 
     try:
-        cache = SearchCacheService(redis_client)
+        cache = SearchCacheService(await get_redis_client())
         await cache.invalidate_all()
     except Exception:
         logger.exception("Cache invalidation failed after deleting document %s", doc_id)
