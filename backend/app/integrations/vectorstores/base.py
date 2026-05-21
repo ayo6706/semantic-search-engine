@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import TypedDict
 
+from app.schemas.health import ServiceHealth
+
+
 class ChunkRecord(TypedDict):
     """Raw record to be upserted to vector store."""
     id: str
@@ -11,6 +14,24 @@ class ChunkRecord(TypedDict):
 
 class BaseVectorStore(ABC):
     """Abstract base class for vector stores."""
+
+    @abstractmethod
+    async def verify_connectivity(self) -> None:
+        """Verify startup connectivity for the vector store.
+
+        Raises:
+            ConnectionError: If the vector store is unreachable.
+        """
+        pass
+
+    @abstractmethod
+    async def check_health(self) -> ServiceHealth:
+        """Measure health status and connection latency of the vector store.
+
+        Returns:
+            ServiceHealth containing status and latency metrics.
+        """
+        pass
 
     @abstractmethod
     async def upsert_batch(self, chunks: list[ChunkRecord]) -> None:

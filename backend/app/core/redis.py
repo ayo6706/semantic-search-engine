@@ -4,20 +4,21 @@ from __future__ import annotations
 
 import asyncio
 import logging
-
+import time
 from typing import Annotated
 
-from fastapi import Depends, Request
+from fastapi import Depends
 import redis.asyncio as redis
 from redis.exceptions import RedisError
 
 from app.core.config import infra_settings
+from app.schemas.health import ServiceHealth
 
 logger = logging.getLogger(__name__)
 
-async def get_redis(request: Request) -> redis.Redis:
-    """Dependency to get the lifespan-managed Redis client."""
-    return request.app.state.redis_client
+async def get_redis() -> redis.Redis:
+    """Dependency to get the Redis client."""
+    return await get_redis_client()
 
 
 RedisDep = Annotated[redis.Redis, Depends(get_redis)]
@@ -59,3 +60,32 @@ async def close_redis() -> None:
     if _redis_client is not None:
         await _redis_client.aclose()
         _redis_client = None
+
+
+async def verify_connectivity() -> None:
+    """Verify Redis connectivity.
+
+    Raises:
+        ConnectionError: If Redis is unreachable.
+    """
+    health = await check_health()
+    if health.status == "error":
+        raise ConnectionError(f"Redis connection failed: {health.error_message}")
+
+
+async def check_health(client: redis.Redis | None = None) -> ServiceHealth:
+    """Measure Redis health status and latency."""
+    start_time = time.perf_counter()
+    try:
+        active_client = client if client is not None else await get_redis_client()
+        await active_client.ping()
+        latency = (time.perf_counter() - start_time) * 1000.0
+        return ServiceHealth(status="ok", latency_ms=latency)
+    except Exception as e:
+        latency = (time.perf_counter() - start_time) * 1000.0
+        return ServiceHealth(status="error", latency_ms=latency, error_message=str(e))
+
+
+async def shutdown() -> None:
+    """Shutdown Redis resources."""
+    await close_redis()
