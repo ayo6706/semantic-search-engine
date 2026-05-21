@@ -3,6 +3,7 @@ import asyncio
 import pytest
 from unittest.mock import AsyncMock, patch
 
+import app.api.dependencies as api_deps
 import app.api.v1.endpoints.search as search_endpoint
 from app.api.v1.endpoints.search import search
 from app.schemas.search import SearchRequest, SearchMode, ScoredChunk, SearchResponse
@@ -14,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 @pytest.mark.asyncio
 @patch("app.api.v1.endpoints.search.SearchCacheService")
+@patch("app.api.v1.endpoints.search.get_redis_client")
 @patch("app.api.v1.endpoints.search.get_cross_encoder")
 @patch("app.api.v1.endpoints.search.build_pipeline")
 @patch("app.api.v1.endpoints.search.DocumentRepository")
@@ -21,6 +23,7 @@ async def test_search_response_includes_latency_and_metadata(
     mock_doc_repo_class,
     mock_build_pipeline,
     mock_get_cross_encoder,
+    mock_get_redis,
     mock_cache_class,
 ):
     # Mock cache to miss
@@ -48,8 +51,7 @@ async def test_search_response_includes_latency_and_metadata(
     cross_encoder = object()
     mock_get_cross_encoder.return_value = cross_encoder
     
-    mock_redis = AsyncMock()
-    response = await search(request, session, mock_redis, llm, vs)
+    response = await search(request, session, llm, vs)
     
     assert response.query == "test"
     assert response.total_results == 1
@@ -73,11 +75,13 @@ async def test_search_response_includes_latency_and_metadata(
 
 @pytest.mark.asyncio
 @patch("app.api.v1.endpoints.search.SearchCacheService")
+@patch("app.api.v1.endpoints.search.get_redis_client")
 @patch("app.api.v1.endpoints.search.get_cross_encoder")
 @patch("app.api.v1.endpoints.search.build_pipeline")
 async def test_search_cache_hit_skips_pipeline_and_cross_encoder(
     mock_build_pipeline,
     mock_get_cross_encoder,
+    mock_get_redis,
     mock_cache_class,
 ):
     cached_response = SearchResponse(
@@ -97,8 +101,7 @@ async def test_search_cache_hit_skips_pipeline_and_cross_encoder(
     llm = AsyncMock(spec=LiteLLMProvider)
     vs = AsyncMock(spec=ChromaDBVectorStore)
 
-    mock_redis = AsyncMock()
-    response = await search(request, session, mock_redis, llm, vs)
+    response = await search(request, session, llm, vs)
 
     assert response is cached_response
     mock_get_cross_encoder.assert_not_awaited()
@@ -108,6 +111,7 @@ async def test_search_cache_hit_skips_pipeline_and_cross_encoder(
 
 @pytest.mark.asyncio
 @patch("app.api.v1.endpoints.search.SearchCacheService")
+@patch("app.api.v1.endpoints.search.get_redis_client")
 @patch("app.api.v1.endpoints.search.get_cross_encoder")
 @patch("app.api.v1.endpoints.search.build_pipeline")
 @patch("app.api.v1.endpoints.search.DocumentRepository")
@@ -115,6 +119,7 @@ async def test_search_without_reranker_does_not_load_cross_encoder(
     mock_doc_repo_class,
     mock_build_pipeline,
     mock_get_cross_encoder,
+    mock_get_redis,
     mock_cache_class,
 ):
     mock_cache = AsyncMock()
@@ -134,8 +139,7 @@ async def test_search_without_reranker_does_not_load_cross_encoder(
     llm = AsyncMock(spec=LiteLLMProvider)
     vs = AsyncMock(spec=ChromaDBVectorStore)
 
-    mock_redis = AsyncMock()
-    response = await search(request, session, mock_redis, llm, vs)
+    response = await search(request, session, llm, vs)
 
     assert response.reranker_used is False
     mock_get_cross_encoder.assert_not_awaited()
@@ -145,6 +149,7 @@ async def test_search_without_reranker_does_not_load_cross_encoder(
 
 @pytest.mark.asyncio
 @patch("app.api.v1.endpoints.search.SearchCacheService")
+@patch("app.api.v1.endpoints.search.get_redis_client")
 @patch("app.api.v1.endpoints.search.get_cross_encoder")
 @patch("app.api.v1.endpoints.search.build_pipeline")
 @patch("app.api.v1.endpoints.search.DocumentRepository")
@@ -152,6 +157,7 @@ async def test_search_falls_back_when_reranker_fails_to_load(
     mock_doc_repo_class,
     mock_build_pipeline,
     mock_get_cross_encoder,
+    mock_get_redis,
     mock_cache_class,
 ):
     mock_cache = AsyncMock()
@@ -186,8 +192,7 @@ async def test_search_falls_back_when_reranker_fails_to_load(
     llm = AsyncMock(spec=LiteLLMProvider)
     vs = AsyncMock(spec=ChromaDBVectorStore)
 
-    mock_redis = AsyncMock()
-    response = await search(request, session, mock_redis, llm, vs)
+    response = await search(request, session, llm, vs)
 
     assert response.reranker_used is False
     assert response.total_results == 1
@@ -206,13 +211,55 @@ async def test_get_cross_encoder_initializes_once_for_concurrent_requests(monkey
         def __init__(self):
             created.append(self)
 
-    monkeypatch.setattr(search_endpoint, "_cross_encoder", None)
-    monkeypatch.setattr(search_endpoint, "_cross_encoder_lock", asyncio.Lock())
-    monkeypatch.setattr(search_endpoint, "CrossEncoderReranker", FakeCrossEncoder)
+    monkeypatch.setattr(api_deps, "_cross_encoder", None)
+    monkeypatch.setattr(api_deps, "_cross_encoder_lock", asyncio.Lock())
+    monkeypatch.setattr(api_deps, "CrossEncoderReranker", FakeCrossEncoder)
 
     first, second = await asyncio.gather(
-        search_endpoint.get_cross_encoder(),
-        search_endpoint.get_cross_encoder(),
+        api_deps.get_cross_encoder(),
+        api_deps.get_cross_encoder(),
+    )
+
+    assert first is second
+    assert created == [first]
+
+
+@pytest.mark.asyncio
+async def test_get_llm_provider_initializes_once_for_concurrent_requests(monkeypatch):
+    created = []
+
+    class FakeLLMProvider:
+        def __init__(self):
+            created.append(self)
+
+    monkeypatch.setattr(api_deps, "_llm_provider", None)
+    monkeypatch.setattr(api_deps, "_llm_provider_lock", asyncio.Lock())
+    monkeypatch.setattr(api_deps, "LiteLLMProvider", FakeLLMProvider)
+
+    first, second = await asyncio.gather(
+        api_deps.get_llm_provider(),
+        api_deps.get_llm_provider(),
+    )
+
+    assert first is second
+    assert created == [first]
+
+
+@pytest.mark.asyncio
+async def test_get_vector_store_initializes_once_for_concurrent_requests(monkeypatch):
+    created = []
+
+    class FakeVectorStore:
+        def __init__(self):
+            created.append(self)
+
+    monkeypatch.setattr(api_deps, "_vector_store", None)
+    monkeypatch.setattr(api_deps, "_vector_store_lock", asyncio.Lock())
+    monkeypatch.setattr(api_deps, "ChromaDBVectorStore", FakeVectorStore)
+
+    first, second = await asyncio.gather(
+        api_deps.get_vector_store(),
+        api_deps.get_vector_store(),
     )
 
     assert first is second

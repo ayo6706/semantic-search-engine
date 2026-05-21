@@ -1,10 +1,10 @@
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
-from sqlalchemy.ext.asyncio import AsyncSession
-import httpx
+from unittest.mock import AsyncMock, patch
 
-from app.core.health import check_postgres, check_redis, check_chromadb, ServiceHealth
+import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.api.v1.endpoints.health import health_check
+from app.core.health import ServiceHealth, check_chromadb, check_postgres, check_redis
 
 
 @pytest.mark.asyncio
@@ -83,35 +83,147 @@ async def test_check_redis_no_client_failure(mock_get_redis_client):
 
 
 @pytest.mark.asyncio
-@patch("httpx.AsyncClient.get")
-async def test_check_chromadb_v2_success(mock_get):
-    mock_resp = MagicMock(spec=httpx.Response)
-    mock_resp.status_code = 200
-    mock_get.return_value = mock_resp
-    res = await check_chromadb()
+async def test_check_chromadb_success():
+    mock_vs = AsyncMock()
+    mock_vs.check_health.return_value = ServiceHealth(status="ok", latency_ms=1.5)
+
+    res = await check_chromadb(mock_vs)
     assert res.status == "ok"
     assert res.error_message is None
+    assert res.latency_ms == 1.5
+    mock_vs.check_health.assert_called_once()
 
 
 @pytest.mark.asyncio
-@patch("httpx.AsyncClient.get")
-async def test_check_chromadb_v1_fallback_success(mock_get):
-    mock_resp_v1 = MagicMock(spec=httpx.Response)
-    mock_resp_v1.status_code = 200
-    mock_get.side_effect = [Exception("v2 failed"), mock_resp_v1]
-    res = await check_chromadb()
-    assert res.status == "ok"
-    assert res.error_message is None
-    assert mock_get.call_count == 2
+async def test_check_chromadb_failure():
+    mock_vs = AsyncMock()
+    mock_vs.check_health.return_value = ServiceHealth(status="error", latency_ms=1.5, error_message="Chroma down")
+
+    res = await check_chromadb(mock_vs)
+    assert res.status == "error"
+    assert "Chroma down" in res.error_message
+    mock_vs.check_health.assert_called_once()
 
 
 @pytest.mark.asyncio
-@patch("httpx.AsyncClient.get")
-async def test_check_chromadb_failure(mock_get):
-    mock_get.side_effect = Exception("Chroma Host Unreachable")
-    res = await check_chromadb()
+@patch("chromadb.AsyncHttpClient")
+async def test_chroma_vector_store_verify_connectivity_success(mock_client_cls):
+    from app.integrations.vectorstores.chroma import ChromaDBVectorStore
+
+    mock_client = AsyncMock()
+    mock_client.heartbeat.return_value = 123456789
+    mock_client_cls.return_value = mock_client
+
+    vs = ChromaDBVectorStore()
+    await vs.verify_connectivity()
+    mock_client.heartbeat.assert_called_once()
+
+
+@pytest.mark.asyncio
+@patch("chromadb.AsyncHttpClient")
+async def test_chroma_vector_store_verify_connectivity_failure(mock_client_cls):
+    from app.integrations.vectorstores.chroma import ChromaDBVectorStore
+
+    mock_client = AsyncMock()
+    mock_client.heartbeat.side_effect = Exception("Chroma Connection Error")
+    mock_client_cls.return_value = mock_client
+
+    vs = ChromaDBVectorStore()
+    with pytest.raises(ConnectionError) as exc_info:
+        await vs.verify_connectivity()
+    assert "Chroma Connection Error" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+@patch("app.core.database.check_health")
+async def test_database_verify_connectivity_uses_health_result(mock_check_health):
+    from app.core import database
+
+    mock_check_health.return_value = ServiceHealth(status="ok", latency_ms=1.0)
+
+    await database.verify_connectivity()
+
+    mock_check_health.assert_awaited_once_with()
+
+
+@pytest.mark.asyncio
+@patch("app.core.database.check_health")
+async def test_database_verify_connectivity_raises_on_unhealthy_result(mock_check_health):
+    from app.core import database
+
+    mock_check_health.return_value = ServiceHealth(
+        status="error",
+        latency_ms=1.0,
+        error_message="connection refused",
+    )
+
+    with pytest.raises(ConnectionError) as exc_info:
+        await database.verify_connectivity()
+
+    assert "connection refused" in str(exc_info.value)
+    mock_check_health.assert_awaited_once_with()
+
+
+@pytest.mark.asyncio
+@patch("app.core.redis.check_health")
+async def test_redis_verify_connectivity_uses_health_result(mock_check_health):
+    from app.core import redis
+
+    mock_check_health.return_value = ServiceHealth(status="ok", latency_ms=1.0)
+
+    await redis.verify_connectivity()
+
+    mock_check_health.assert_awaited_once_with()
+
+
+@pytest.mark.asyncio
+@patch("app.core.redis.check_health")
+async def test_redis_verify_connectivity_raises_on_unhealthy_result(mock_check_health):
+    from app.core import redis
+
+    mock_check_health.return_value = ServiceHealth(
+        status="error",
+        latency_ms=1.0,
+        error_message="operation timed out",
+    )
+
+    with pytest.raises(ConnectionError) as exc_info:
+        await redis.verify_connectivity()
+
+    assert "operation timed out" in str(exc_info.value)
+    mock_check_health.assert_awaited_once_with()
+
+
+@pytest.mark.asyncio
+@patch("chromadb.AsyncHttpClient")
+async def test_chroma_vector_store_check_health_success(mock_client_cls):
+    from app.integrations.vectorstores.chroma import ChromaDBVectorStore
+
+    mock_client = AsyncMock()
+    mock_client.heartbeat.return_value = 123456789
+    mock_client_cls.return_value = mock_client
+
+    vs = ChromaDBVectorStore()
+    res = await vs.check_health()
+    assert res.status == "ok"
+    assert res.error_message is None
+    assert isinstance(res.latency_ms, float)
+
+
+@pytest.mark.asyncio
+@patch("chromadb.AsyncHttpClient")
+async def test_chroma_vector_store_check_health_failure(mock_client_cls):
+    from app.integrations.vectorstores.chroma import ChromaDBVectorStore
+
+    mock_client = AsyncMock()
+    mock_client.heartbeat.side_effect = Exception("Chroma Host Unreachable")
+    mock_client_cls.return_value = mock_client
+
+    vs = ChromaDBVectorStore()
+    res = await vs.check_health()
     assert res.status == "error"
     assert "Chroma Host Unreachable" in res.error_message
+
 
 
 @pytest.mark.asyncio
@@ -126,7 +238,8 @@ async def test_health_check_endpoint_all_ok(
     mock_check_chromadb.return_value = ServiceHealth(status="ok", latency_ms=5.0)
 
     db_session = AsyncMock(spec=AsyncSession)
-    response = await health_check(db_session)
+    mock_vs = AsyncMock()
+    response = await health_check(db_session, mock_vs)
 
     assert response["status"] == "ok"
     assert response["services"]["postgres"] == "ok"
@@ -146,9 +259,50 @@ async def test_health_check_endpoint_degraded(
     mock_check_chromadb.return_value = ServiceHealth(status="ok", latency_ms=5.0)
 
     db_session = AsyncMock(spec=AsyncSession)
-    response = await health_check(db_session)
+    mock_vs = AsyncMock()
+    response = await health_check(db_session, mock_vs)
 
     assert response["status"] == "degraded"
     assert response["services"]["postgres"] == "ok"
     assert response["services"]["redis"] == "error"
     assert response["services"]["chromadb"] == "ok"
+
+
+@pytest.mark.asyncio
+@patch("app.core.health.check_postgres")
+@patch("app.core.health.check_redis")
+@patch("app.core.health.check_chromadb")
+async def test_verify_connectivity_success(
+    mock_check_chromadb, mock_check_redis, mock_check_postgres
+):
+    from app.core.health import verify_connectivity
+
+    mock_check_postgres.return_value = ServiceHealth(status="ok", latency_ms=1.0)
+    mock_check_redis.return_value = ServiceHealth(status="ok", latency_ms=1.0)
+    mock_check_chromadb.return_value = ServiceHealth(status="ok", latency_ms=1.0)
+
+    # Should not raise any exception
+    mock_vs = AsyncMock()
+    await verify_connectivity(mock_vs)
+
+
+@pytest.mark.asyncio
+@patch("app.core.health.check_postgres")
+@patch("app.core.health.check_redis")
+@patch("app.core.health.check_chromadb")
+async def test_verify_connectivity_failure(
+    mock_check_chromadb, mock_check_redis, mock_check_postgres
+):
+    from app.core.health import verify_connectivity
+
+    mock_check_postgres.return_value = ServiceHealth(status="error", latency_ms=1.0, error_message="DB down")
+    mock_check_redis.return_value = ServiceHealth(status="ok", latency_ms=1.0)
+    mock_check_chromadb.return_value = ServiceHealth(status="error", latency_ms=1.0, error_message="Chroma down")
+
+    mock_vs = AsyncMock()
+    with pytest.raises(ConnectionError) as exc_info:
+        await verify_connectivity(mock_vs)
+
+    assert "DB down" in str(exc_info.value)
+    assert "Chroma down" in str(exc_info.value)
+    assert "Redis" not in str(exc_info.value)
