@@ -108,13 +108,13 @@ class IngestionService:
                 logger.info(f"Document {doc_id} deleted during parsing, aborting.")
                 return
 
-            # 5. Write ChromaDB
+            # 5. Write VSDB
             await self.vector_store.upsert_batch(vector_records)
 
             # 6. Race Check 2 & DB Commit
             current_doc = await self.doc_repo.get_by_id(doc_id)
             if not current_doc:
-                logger.info(f"Document {doc_id} deleted during Chroma write, cleaning up.")
+                logger.info(f"Document {doc_id} deleted during VSDB write, cleaning up.")
                 await self.vector_store.delete_by_doc_id(doc_id_str)
                 return
 
@@ -130,11 +130,11 @@ class IngestionService:
             await self.session.rollback() # Rollback any pending transactions
 
             # 7. Failure Handling
-            # Attempt to clean up Chroma vectors to prevent orphans
+            # Attempt to clean up VSDB vectors to prevent orphans
             try:
                 await self.vector_store.delete_by_doc_id(doc_id_str)
-            except Exception as chroma_error:
-                logger.error(f"Failed to cleanup Chroma vectors for {doc_id}: {chroma_error}")
+            except Exception as vsdb_error:
+                logger.error(f"Failed to cleanup VSDB vectors for {doc_id}: {vsdb_error}")
 
             # Attempt to clean up DB and update status
             try:
