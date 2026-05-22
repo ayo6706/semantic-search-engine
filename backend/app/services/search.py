@@ -12,8 +12,10 @@ from app.integrations.vectorstores.base import BaseVectorStore
 from app.repositories.document import DocumentRepository
 from app.schemas.search import ScoredChunk, SearchRequest, SearchResponse, SearchResult
 from app.search.factory import build_pipeline
+from app.search.pipeline import SearchPipelineCancelled
 from app.search.rerankers.cross_encoder import CrossEncoderReranker
 from app.search.snippet import extract_snippet
+from app.search.types import DisconnectChecker, StaleChecker
 
 logger = logging.getLogger(__name__)
 
@@ -33,13 +35,21 @@ class SearchService:
         self.vector_store = vector_store
         self.cross_encoder_provider = cross_encoder_provider
 
-    async def search(self, request: SearchRequest) -> SearchResponse:
+    async def search(
+        self,
+        request: SearchRequest,
+        is_disconnected: DisconnectChecker | None = None,
+        is_stale: StaleChecker | None = None,
+    ) -> SearchResponse:
         cache = await self._get_cache()
         cached_response = await self._get_cached_response(cache, request)
         if cached_response is not None:
             return cached_response
 
         start = time.perf_counter()
+        if is_stale and await is_stale():
+            return self._build_cancelled_response(request, start, reranker_used=False)
+
         cross_encoder, reranker_used = await self._load_reranker(request)
 
         pipeline = build_pipeline(
@@ -50,11 +60,19 @@ class SearchService:
             session=self.session,
             cross_encoder=cross_encoder,
         )
-        scored_chunks = await pipeline.execute(
-            query=request.query,
-            top_k=request.top_k,
-            doc_ids=request.doc_ids,
-        )
+        try:
+            scored_chunks = await pipeline.execute(
+                query=request.query,
+                top_k=request.top_k,
+                doc_ids=request.doc_ids,
+                is_disconnected=is_disconnected,
+                is_stale=is_stale,
+            )
+        except SearchPipelineCancelled:
+            return self._build_cancelled_response(request, start, reranker_used)
+
+        if is_stale and await is_stale():
+            return self._build_cancelled_response(request, start, reranker_used)
 
         response = await self._build_response(request, scored_chunks, start, reranker_used)
         await self._cache_response(cache, request, response, reranker_used)
@@ -146,3 +164,19 @@ class SearchService:
             await cache.set(request, response)
         except Exception:
             logger.warning("Cache write failed after search", exc_info=True)
+
+    @staticmethod
+    def _build_cancelled_response(
+        request: SearchRequest,
+        start: float,
+        reranker_used: bool,
+    ) -> SearchResponse:
+        elapsed_ms = (time.perf_counter() - start) * 1000
+        return SearchResponse(
+            results=[],
+            query=request.query,
+            total_results=0,
+            latency_ms=round(elapsed_ms, 2),
+            search_mode=request.search_mode.value,
+            reranker_used=reranker_used,
+        )
