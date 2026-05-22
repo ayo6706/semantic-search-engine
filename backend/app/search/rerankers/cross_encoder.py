@@ -7,6 +7,7 @@ from sentence_transformers import CrossEncoder
 from app.core.config import search_settings
 from app.schemas.search import ScoredChunk
 from app.search.rerankers.base import BaseReranker
+from app.search.types import StaleChecker
 
 
 logger = logging.getLogger(__name__)
@@ -65,24 +66,46 @@ class CrossEncoderReranker(BaseReranker):
         self,
         query: str,
         chunks: list[ScoredChunk],
-        top_n: int = 10
+        top_n: int = 10,
+        is_stale: StaleChecker | None = None,
     ) -> list[ScoredChunk]:
         """Rerank chunks using the cross-encoder model."""
         if not chunks:
             return []
 
+        if is_stale and await is_stale():
+            logger.info("Search request became stale before cross-encoder queue")
+            return []
+
         # Prepare pairs for the cross-encoder: (query, document_text)
         pairs = [[query, chunk.text] for chunk in chunks]
 
-        start_time = time.perf_counter()
+        queue_start = time.perf_counter()
 
         # Run inference in a thread pool so it doesn't block the async event loop
         async with self._predict_lock:
+            queue_ms = (time.perf_counter() - queue_start) * 1000
+            if is_stale and await is_stale():
+                logger.info(
+                    "Search request became stale after %.1fms in cross-encoder queue",
+                    queue_ms,
+                )
+                return []
+
+            predict_start = time.perf_counter()
             scores = await asyncio.to_thread(self.model.predict, pairs)
-        
-        elapsed_ms = (time.perf_counter() - start_time) * 1000
+            predict_ms = (time.perf_counter() - predict_start) * 1000
+
+        elapsed_ms = queue_ms + predict_ms
         if elapsed_ms > 500:
-            logger.warning(f"Cross-encoder reranking took {elapsed_ms:.1f}ms (>500ms) for {len(chunks)} chunks")
+            logger.warning(
+                "Cross-encoder reranking took %.1fms (>500ms) for %d chunks "
+                "(queue %.1fms, predict %.1fms)",
+                elapsed_ms,
+                len(chunks),
+                queue_ms,
+                predict_ms,
+            )
 
         # Update scores on chunks
         for i, chunk in enumerate(chunks):
