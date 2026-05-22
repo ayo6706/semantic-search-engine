@@ -1,8 +1,7 @@
 import logging
 from typing import Any
-import litellm
 
-from app.core.queue import _parse_redis_settings
+from app.core.queue import get_queue_settings
 from app.core.database import async_session_factory
 from app.repositories.document import DocumentRepository
 from app.repositories.chunk import ChunkRepository
@@ -12,8 +11,7 @@ from app.integrations.llm.litellm import LiteLLMProvider
 from app.integrations.vectorstores.chroma import ChromaDBVectorStore
 from app.services.ingestion import IngestionService
 from app.services.cache import SearchCacheService
-from app.core.config import llm_settings
-from app.core.redis import close_redis, get_redis_client
+from app.core.cache import get_cache_client, shutdown as shutdown_cache
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +25,7 @@ async def startup(ctx: dict[str, Any]) -> None:
 
 async def shutdown(ctx: dict[str, Any]) -> None:
     """Clean up dependencies."""
-    await close_redis()
+    await shutdown_cache()
 
 async def process_document(ctx: dict[str, Any], document_id: str) -> None:
     """arq task to process a document."""
@@ -55,7 +53,7 @@ async def process_document(ctx: dict[str, Any], document_id: str) -> None:
             raise
 
     try:
-        cache = SearchCacheService(await get_redis_client())
+        cache = SearchCacheService(await get_cache_client())
         await cache.invalidate_all()
     except Exception:
         logger.exception("Cache invalidation failed, continuing ingestion")
@@ -64,7 +62,7 @@ async def process_document(ctx: dict[str, Any], document_id: str) -> None:
 class WorkerSettings:
     """arq worker configuration."""
     functions = [process_document]
-    redis_settings = _parse_redis_settings()
+    redis_settings = get_queue_settings()
     on_startup = startup
     on_shutdown = shutdown
     max_tries = 3
