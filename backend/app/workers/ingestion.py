@@ -10,8 +10,7 @@ from app.services.chunker import RecursiveCharacterTextSplitter
 from app.integrations.llm.litellm import LiteLLMProvider
 from app.integrations.vectorstores.chroma import ChromaDBVectorStore
 from app.services.ingestion import IngestionService
-from app.services.cache import SearchCacheService
-from app.core.cache import get_cache_client, shutdown as shutdown_cache
+from app.core.cache import get_search_cache, shutdown as shutdown_cache
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +52,7 @@ async def process_document(ctx: dict[str, Any], document_id: str) -> None:
             raise
 
     try:
-        cache = SearchCacheService(await get_cache_client())
+        cache = await get_search_cache()
         await cache.invalidate_all()
     except Exception:
         logger.exception("Cache invalidation failed, continuing ingestion")
