@@ -8,7 +8,8 @@ from app.api.v1.endpoints.search import search
 from app.schemas.search import SearchRequest, SearchMode, ScoredChunk, SearchResponse
 from app.integrations.llm.litellm import LiteLLMProvider
 from app.integrations.vectorstores.chroma import ChromaDBVectorStore
-from app.search.pipeline import SearchPipeline
+from app.search.cancellation import search_cancellation_registry
+from app.search.pipeline import SearchPipeline, SearchPipelineCancelled
 from app.services.search import SearchService
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -27,26 +28,64 @@ async def test_search_endpoint_delegates_to_service():
     service = AsyncMock(spec=SearchService)
     service.search.return_value = expected
 
-    response = await search(request, service)
+    raw_request = AsyncMock()
+    raw_request.is_disconnected = AsyncMock(return_value=False)
+
+    response = await search(request, raw_request, service)
 
     assert response is expected
-    service.search.assert_awaited_once_with(request)
+    service.search.assert_awaited_once_with(
+        request,
+        is_disconnected=raw_request.is_disconnected,
+        is_stale=None,
+    )
 
 
 @pytest.mark.asyncio
-@patch("app.services.search.SearchCacheService")
-@patch("app.services.search.get_cache_client")
+async def test_search_endpoint_passes_stale_checker():
+    request = SearchRequest(query="test", search_mode=SearchMode.HYBRID)
+    expected = SearchResponse(
+        results=[],
+        query="test",
+        total_results=0,
+        latency_ms=1.0,
+        search_mode="hybrid",
+        reranker_used=False,
+    )
+    service = AsyncMock(spec=SearchService)
+    service.search.return_value = expected
+
+    raw_request = AsyncMock()
+    raw_request.is_disconnected = AsyncMock(return_value=False)
+
+    response = await search(
+        request,
+        raw_request,
+        service,
+        search_session_id="tab-1",
+        search_request_id=1,
+    )
+
+    assert response is expected
+    is_stale = service.search.await_args.kwargs["is_stale"]
+    assert await is_stale() is False
+
+    await search_cancellation_registry.mark_latest("tab-1", 2)
+    assert await is_stale() is True
+
+
+@pytest.mark.asyncio
+@patch("app.services.search.get_search_cache")
 @patch("app.services.search.build_pipeline")
 @patch("app.services.search.DocumentRepository")
 async def test_search_response_includes_latency_and_metadata(
     mock_doc_repo_class,
     mock_build_pipeline,
-    mock_get_cache,
-    mock_cache_class,
+    mock_get_search_cache,
 ):
     mock_cache = AsyncMock()
     mock_cache.get.return_value = None
-    mock_cache_class.return_value = mock_cache
+    mock_get_search_cache.return_value = mock_cache
 
     mock_pipeline = AsyncMock(spec=SearchPipeline)
     mock_pipeline.execute.return_value = [
@@ -89,13 +128,11 @@ async def test_search_response_includes_latency_and_metadata(
 
 
 @pytest.mark.asyncio
-@patch("app.services.search.SearchCacheService")
-@patch("app.services.search.get_cache_client")
+@patch("app.services.search.get_search_cache")
 @patch("app.services.search.build_pipeline")
 async def test_search_cache_hit_skips_pipeline_and_cross_encoder(
     mock_build_pipeline,
-    mock_get_cache,
-    mock_cache_class,
+    mock_get_search_cache,
 ):
     cached_response = SearchResponse(
         results=[],
@@ -107,7 +144,7 @@ async def test_search_cache_hit_skips_pipeline_and_cross_encoder(
     )
     mock_cache = AsyncMock()
     mock_cache.get.return_value = cached_response
-    mock_cache_class.return_value = mock_cache
+    mock_get_search_cache.return_value = mock_cache
 
     request = SearchRequest(query="test", search_mode=SearchMode.HYBRID, use_reranker=True)
     session = AsyncMock(spec=AsyncSession)
@@ -125,19 +162,84 @@ async def test_search_cache_hit_skips_pipeline_and_cross_encoder(
 
 
 @pytest.mark.asyncio
-@patch("app.services.search.SearchCacheService")
-@patch("app.services.search.get_cache_client")
+@patch("app.services.search.get_search_cache")
+@patch("app.services.search.build_pipeline")
+@patch("app.services.search.DocumentRepository")
+async def test_stale_search_response_is_not_cached(
+    mock_doc_repo_class,
+    mock_build_pipeline,
+    mock_get_search_cache,
+):
+    mock_cache = AsyncMock()
+    mock_cache.get.return_value = None
+    mock_get_search_cache.return_value = mock_cache
+
+    mock_pipeline = AsyncMock(spec=SearchPipeline)
+    mock_pipeline.execute.return_value = []
+    mock_build_pipeline.return_value = mock_pipeline
+
+    request = SearchRequest(query="test", search_mode=SearchMode.HYBRID)
+    session = AsyncMock(spec=AsyncSession)
+    llm = AsyncMock(spec=LiteLLMProvider)
+    vs = AsyncMock(spec=ChromaDBVectorStore)
+    get_cross_encoder = AsyncMock(return_value=object())
+    service = SearchService(session, llm, vs, get_cross_encoder)
+
+    async def is_stale():
+        return True
+
+    response = await service.search(request, is_stale=is_stale)
+
+    assert response.total_results == 0
+    get_cross_encoder.assert_not_awaited()
+    mock_build_pipeline.assert_not_called()
+    mock_doc_repo_class.assert_not_called()
+    mock_cache.set.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+@patch("app.services.search.get_search_cache")
+@patch("app.services.search.build_pipeline")
+@patch("app.services.search.DocumentRepository")
+async def test_disconnected_search_response_is_not_cached(
+    mock_doc_repo_class,
+    mock_build_pipeline,
+    mock_get_search_cache,
+):
+    mock_cache = AsyncMock()
+    mock_cache.get.return_value = None
+    mock_get_search_cache.return_value = mock_cache
+
+    mock_pipeline = AsyncMock(spec=SearchPipeline)
+    mock_pipeline.execute.side_effect = SearchPipelineCancelled
+    mock_build_pipeline.return_value = mock_pipeline
+
+    request = SearchRequest(query="test", search_mode=SearchMode.HYBRID)
+    session = AsyncMock(spec=AsyncSession)
+    llm = AsyncMock(spec=LiteLLMProvider)
+    vs = AsyncMock(spec=ChromaDBVectorStore)
+    get_cross_encoder = AsyncMock(return_value=object())
+    service = SearchService(session, llm, vs, get_cross_encoder)
+
+    response = await service.search(request)
+
+    assert response.total_results == 0
+    mock_doc_repo_class.assert_not_called()
+    mock_cache.set.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+@patch("app.services.search.get_search_cache")
 @patch("app.services.search.build_pipeline")
 @patch("app.services.search.DocumentRepository")
 async def test_search_without_reranker_does_not_load_cross_encoder(
     mock_doc_repo_class,
     mock_build_pipeline,
-    mock_get_cache,
-    mock_cache_class,
+    mock_get_search_cache,
 ):
     mock_cache = AsyncMock()
     mock_cache.get.return_value = None
-    mock_cache_class.return_value = mock_cache
+    mock_get_search_cache.return_value = mock_cache
 
     mock_pipeline = AsyncMock(spec=SearchPipeline)
     mock_pipeline.execute.return_value = []
@@ -163,19 +265,17 @@ async def test_search_without_reranker_does_not_load_cross_encoder(
 
 
 @pytest.mark.asyncio
-@patch("app.services.search.SearchCacheService")
-@patch("app.services.search.get_cache_client")
+@patch("app.services.search.get_search_cache")
 @patch("app.services.search.build_pipeline")
 @patch("app.services.search.DocumentRepository")
 async def test_search_falls_back_when_reranker_fails_to_load(
     mock_doc_repo_class,
     mock_build_pipeline,
-    mock_get_cache,
-    mock_cache_class,
+    mock_get_search_cache,
 ):
     mock_cache = AsyncMock()
     mock_cache.get.return_value = None
-    mock_cache_class.return_value = mock_cache
+    mock_get_search_cache.return_value = mock_cache
 
     mock_pipeline = AsyncMock(spec=SearchPipeline)
     mock_pipeline.execute.return_value = [
