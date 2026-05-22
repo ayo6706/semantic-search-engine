@@ -1,50 +1,30 @@
-"""arq job queue setup.
-
-Provides helpers for creating an arq Redis connection pool
-used by the background worker for document ingestion tasks.
-"""
+"""Configured job queue provider interface."""
 
 from __future__ import annotations
 
-from arq import create_pool
-from arq.connections import ArqRedis, RedisSettings
+from typing import Protocol
 
-from app.core.config import infra_settings
-
-
-def _parse_redis_settings() -> RedisSettings:
-    """Parse the REDIS_URL into arq RedisSettings.
-
-    arq's ``RedisSettings`` does not accept a DSN directly, so we parse
-    the URL components manually.
-
-    Returns:
-        An arq ``RedisSettings`` instance.
-    """
-    from urllib.parse import urlparse
-
-    parsed = urlparse(infra_settings.REDIS_URL)
-    path = parsed.path.lstrip("/")
-    try:
-        database = int(path) if path else 0
-    except ValueError as e:
-        raise ValueError(
-            f"Invalid Redis database index in REDIS_URL: '{infra_settings.REDIS_URL}'. "
-            f"Expected an integer, got '{path}'."
-        ) from e
-
-    return RedisSettings(
-        host=parsed.hostname or "localhost",
-        port=parsed.port or 6379,
-        password=parsed.password,
-        database=database,
-    )
+from app.integrations.queues import arq_redis
 
 
-async def create_arq_pool() -> ArqRedis:
-    """Create an arq Redis connection pool.
+class QueuePool(Protocol):
+    async def enqueue_job(self, function: str, *args: object) -> object: ...
 
-    Returns:
-        An ``ArqRedis`` connection pool for enqueuing jobs.
-    """
-    return await create_pool(_parse_redis_settings())
+    async def close(self) -> None: ...
+
+
+class QueueSettings(Protocol):
+    host: str
+    port: int
+    password: str | None
+    database: int
+
+
+def get_queue_settings() -> QueueSettings:
+    """Return QueueSettings for consumers that configure queue workers."""
+    return arq_redis.parse_queue_settings()
+
+
+async def create_queue_pool() -> QueuePool:
+    """Create and return an async QueuePool ready to enqueue jobs."""
+    return await arq_redis.create_queue_pool()
