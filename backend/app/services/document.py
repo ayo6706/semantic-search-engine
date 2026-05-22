@@ -11,11 +11,10 @@ from fastapi import HTTPException, UploadFile
 
 from app.core.config import infra_settings
 from app.core.queue import create_queue_pool
-from app.core.cache import get_cache_client
+from app.core.cache import get_search_cache
 from app.integrations.vectorstores.base import BaseVectorStore
 from app.models.document import Document
 from app.repositories.document import DocumentRepository
-from app.services.cache import SearchCacheService
 
 logger = logging.getLogger(__name__)
 
@@ -130,7 +129,7 @@ class DocumentService:
                 os.remove(file_path)
 
         try:
-            cache = SearchCacheService(await get_cache_client())
+            cache = await get_search_cache()
             await cache.invalidate_all()
         except Exception:
             logger.exception("Cache invalidation failed after deleting document %s", doc_id)
