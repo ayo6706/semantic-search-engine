@@ -4,54 +4,69 @@ import pytest
 from unittest.mock import AsyncMock, patch
 
 import app.api.dependencies as api_deps
-import app.api.v1.endpoints.search as search_endpoint
 from app.api.v1.endpoints.search import search
 from app.schemas.search import SearchRequest, SearchMode, ScoredChunk, SearchResponse
 from app.integrations.llm.litellm import LiteLLMProvider
 from app.integrations.vectorstores.chroma import ChromaDBVectorStore
 from app.search.pipeline import SearchPipeline
+from app.services.search import SearchService
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @pytest.mark.asyncio
-@patch("app.api.v1.endpoints.search.SearchCacheService")
-@patch("app.api.v1.endpoints.search.get_redis_client")
-@patch("app.api.v1.endpoints.search.get_cross_encoder")
-@patch("app.api.v1.endpoints.search.build_pipeline")
-@patch("app.api.v1.endpoints.search.DocumentRepository")
+async def test_search_endpoint_delegates_to_service():
+    request = SearchRequest(query="test", search_mode=SearchMode.HYBRID)
+    expected = SearchResponse(
+        results=[],
+        query="test",
+        total_results=0,
+        latency_ms=1.0,
+        search_mode="hybrid",
+        reranker_used=False,
+    )
+    service = AsyncMock(spec=SearchService)
+    service.search.return_value = expected
+
+    response = await search(request, service)
+
+    assert response is expected
+    service.search.assert_awaited_once_with(request)
+
+
+@pytest.mark.asyncio
+@patch("app.services.search.SearchCacheService")
+@patch("app.services.search.get_cache_client")
+@patch("app.services.search.build_pipeline")
+@patch("app.services.search.DocumentRepository")
 async def test_search_response_includes_latency_and_metadata(
     mock_doc_repo_class,
     mock_build_pipeline,
-    mock_get_cross_encoder,
-    mock_get_redis,
+    mock_get_cache,
     mock_cache_class,
 ):
-    # Mock cache to miss
     mock_cache = AsyncMock()
     mock_cache.get.return_value = None
     mock_cache_class.return_value = mock_cache
-    
-    # Mock pipeline to return a dummy chunk
+
     mock_pipeline = AsyncMock(spec=SearchPipeline)
     mock_pipeline.execute.return_value = [
         ScoredChunk(id="c1", doc_id="d1", text="some test text here", page_num=1, dense_score=0.9, sparse_score=0.5, rerank_score=0.95)
     ]
     mock_build_pipeline.return_value = mock_pipeline
-    
-    # Mock DocumentRepository batch resolution
+
     mock_repo = AsyncMock()
     mock_repo.get_filenames_by_ids.return_value = {"d1": "test_doc.pdf"}
     mock_doc_repo_class.return_value = mock_repo
-    
-    # Dependencies
+
     request = SearchRequest(query="test", search_mode=SearchMode.HYBRID, top_k=10, use_reranker=True)
     session = AsyncMock(spec=AsyncSession)
     llm = AsyncMock(spec=LiteLLMProvider)
     vs = AsyncMock(spec=ChromaDBVectorStore)
     cross_encoder = object()
-    mock_get_cross_encoder.return_value = cross_encoder
-    
-    response = await search(request, session, llm, vs)
+    get_cross_encoder = AsyncMock(return_value=cross_encoder)
+    service = SearchService(session, llm, vs, get_cross_encoder)
+
+    response = await service.search(request)
     
     assert response.query == "test"
     assert response.total_results == 1
@@ -66,22 +81,20 @@ async def test_search_response_includes_latency_and_metadata(
     assert result.dense_score == 0.9
     assert result.sparse_score == 0.5
     assert result.rerank_score == 0.95
-    assert result.score == 0.95  # final score defaults to rerank_score if present
+    assert result.score == 0.95
     assert "<mark>test</mark>" in result.snippet
-    mock_get_cross_encoder.assert_awaited_once()
+    get_cross_encoder.assert_awaited_once()
     mock_build_pipeline.assert_called_once()
     assert mock_build_pipeline.call_args.kwargs["cross_encoder"] is cross_encoder
 
 
 @pytest.mark.asyncio
-@patch("app.api.v1.endpoints.search.SearchCacheService")
-@patch("app.api.v1.endpoints.search.get_redis_client")
-@patch("app.api.v1.endpoints.search.get_cross_encoder")
-@patch("app.api.v1.endpoints.search.build_pipeline")
+@patch("app.services.search.SearchCacheService")
+@patch("app.services.search.get_cache_client")
+@patch("app.services.search.build_pipeline")
 async def test_search_cache_hit_skips_pipeline_and_cross_encoder(
     mock_build_pipeline,
-    mock_get_cross_encoder,
-    mock_get_redis,
+    mock_get_cache,
     mock_cache_class,
 ):
     cached_response = SearchResponse(
@@ -100,26 +113,26 @@ async def test_search_cache_hit_skips_pipeline_and_cross_encoder(
     session = AsyncMock(spec=AsyncSession)
     llm = AsyncMock(spec=LiteLLMProvider)
     vs = AsyncMock(spec=ChromaDBVectorStore)
+    get_cross_encoder = AsyncMock()
+    service = SearchService(session, llm, vs, get_cross_encoder)
 
-    response = await search(request, session, llm, vs)
+    response = await service.search(request)
 
     assert response is cached_response
-    mock_get_cross_encoder.assert_not_awaited()
+    get_cross_encoder.assert_not_awaited()
     mock_build_pipeline.assert_not_called()
     mock_cache.set.assert_not_awaited()
 
 
 @pytest.mark.asyncio
-@patch("app.api.v1.endpoints.search.SearchCacheService")
-@patch("app.api.v1.endpoints.search.get_redis_client")
-@patch("app.api.v1.endpoints.search.get_cross_encoder")
-@patch("app.api.v1.endpoints.search.build_pipeline")
-@patch("app.api.v1.endpoints.search.DocumentRepository")
+@patch("app.services.search.SearchCacheService")
+@patch("app.services.search.get_cache_client")
+@patch("app.services.search.build_pipeline")
+@patch("app.services.search.DocumentRepository")
 async def test_search_without_reranker_does_not_load_cross_encoder(
     mock_doc_repo_class,
     mock_build_pipeline,
-    mock_get_cross_encoder,
-    mock_get_redis,
+    mock_get_cache,
     mock_cache_class,
 ):
     mock_cache = AsyncMock()
@@ -138,33 +151,31 @@ async def test_search_without_reranker_does_not_load_cross_encoder(
     session = AsyncMock(spec=AsyncSession)
     llm = AsyncMock(spec=LiteLLMProvider)
     vs = AsyncMock(spec=ChromaDBVectorStore)
+    get_cross_encoder = AsyncMock()
+    service = SearchService(session, llm, vs, get_cross_encoder)
 
-    response = await search(request, session, llm, vs)
+    response = await service.search(request)
 
     assert response.reranker_used is False
-    mock_get_cross_encoder.assert_not_awaited()
+    get_cross_encoder.assert_not_awaited()
     mock_build_pipeline.assert_called_once()
     assert mock_build_pipeline.call_args.kwargs["cross_encoder"] is None
 
 
 @pytest.mark.asyncio
-@patch("app.api.v1.endpoints.search.SearchCacheService")
-@patch("app.api.v1.endpoints.search.get_redis_client")
-@patch("app.api.v1.endpoints.search.get_cross_encoder")
-@patch("app.api.v1.endpoints.search.build_pipeline")
-@patch("app.api.v1.endpoints.search.DocumentRepository")
+@patch("app.services.search.SearchCacheService")
+@patch("app.services.search.get_cache_client")
+@patch("app.services.search.build_pipeline")
+@patch("app.services.search.DocumentRepository")
 async def test_search_falls_back_when_reranker_fails_to_load(
     mock_doc_repo_class,
     mock_build_pipeline,
-    mock_get_cross_encoder,
-    mock_get_redis,
+    mock_get_cache,
     mock_cache_class,
 ):
     mock_cache = AsyncMock()
     mock_cache.get.return_value = None
     mock_cache_class.return_value = mock_cache
-
-    mock_get_cross_encoder.side_effect = RuntimeError("model load failed")
 
     mock_pipeline = AsyncMock(spec=SearchPipeline)
     mock_pipeline.execute.return_value = [
@@ -191,12 +202,14 @@ async def test_search_falls_back_when_reranker_fails_to_load(
     session = AsyncMock(spec=AsyncSession)
     llm = AsyncMock(spec=LiteLLMProvider)
     vs = AsyncMock(spec=ChromaDBVectorStore)
+    get_cross_encoder = AsyncMock(side_effect=RuntimeError("model load failed"))
+    service = SearchService(session, llm, vs, get_cross_encoder)
 
-    response = await search(request, session, llm, vs)
+    response = await service.search(request)
 
     assert response.reranker_used is False
     assert response.total_results == 1
-    mock_get_cross_encoder.assert_awaited_once()
+    get_cross_encoder.assert_awaited_once()
     mock_build_pipeline.assert_called_once()
     assert mock_build_pipeline.call_args.kwargs["cross_encoder"] is None
     assert mock_build_pipeline.call_args.kwargs["use_reranker"] is False
