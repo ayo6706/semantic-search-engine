@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.cache import get_cache_client
+from app.core.cache import SearchCache, get_search_cache
 from app.integrations.llm.base import BaseLLMProvider
 from app.integrations.vectorstores.base import BaseVectorStore
 from app.repositories.document import DocumentRepository
@@ -14,7 +14,6 @@ from app.schemas.search import ScoredChunk, SearchRequest, SearchResponse, Searc
 from app.search.factory import build_pipeline
 from app.search.rerankers.cross_encoder import CrossEncoderReranker
 from app.search.snippet import extract_snippet
-from app.services.cache import SearchCacheService
 
 logger = logging.getLogger(__name__)
 
@@ -61,16 +60,16 @@ class SearchService:
         await self._cache_response(cache, request, response, reranker_used)
         return response
 
-    async def _get_cache(self) -> SearchCacheService | None:
+    async def _get_cache(self) -> SearchCache | None:
         try:
-            return SearchCacheService(await get_cache_client())
+            return await get_search_cache()
         except Exception:
             logger.warning("Search cache unavailable, continuing without cache", exc_info=True)
             return None
 
     @staticmethod
     async def _get_cached_response(
-        cache: SearchCacheService | None,
+        cache: SearchCache | None,
         request: SearchRequest,
     ) -> SearchResponse | None:
         if cache is None:
@@ -136,7 +135,7 @@ class SearchService:
 
     @staticmethod
     async def _cache_response(
-        cache: SearchCacheService | None,
+        cache: SearchCache | None,
         request: SearchRequest,
         response: SearchResponse,
         reranker_used: bool,
