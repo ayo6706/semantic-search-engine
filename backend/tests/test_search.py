@@ -11,11 +11,12 @@ from app.schemas.search import ScoredChunk, SearchMode, SearchRequest
 from app.search.fusers.noop import NoopFuser
 from app.search.fusers.rrf import RRFFuser
 from app.search.factory import build_pipeline
-from app.search.pipeline import SearchPipeline
+from app.search.pipeline import SearchPipeline, SearchPipelineCancelled
 from app.search.rerankers.cross_encoder import CrossEncoderReranker
 from app.search.rerankers.noop import NoopReranker
 from app.search.retrievers.dense import DenseRetriever
 from app.search.snippet import extract_snippet
+from app.search.types import StaleChecker
 
 
 def test_scored_chunk_final_score():
@@ -162,7 +163,13 @@ async def test_pipeline_limits_rerank_candidate_window(monkeypatch):
             self.received_count = 0
             self.top_n = 0
 
-        async def rerank(self, query, chunks, top_n=10):
+        async def rerank(
+            self,
+            query,
+            chunks,
+            top_n=10,
+            is_stale: StaleChecker | None = None,
+        ):
             self.received_count = len(chunks)
             self.top_n = top_n
             return chunks[:top_n]
@@ -176,6 +183,43 @@ async def test_pipeline_limits_rerank_candidate_window(monkeypatch):
     assert len(results) == 2
     assert reranker.received_count == 3
     assert reranker.top_n == 2
+
+
+@pytest.mark.asyncio
+async def test_pipeline_skips_reranking_when_request_becomes_stale():
+    chunks = [ScoredChunk(id="c1", doc_id="d1", text="text", page_num=1)]
+
+    class FakeRetriever:
+        async def retrieve(self, query, top_k=50, doc_ids=None):
+            return chunks
+
+    class FakeFuser:
+        def fuse(self, result_sets):
+            return result_sets[0]
+
+    class RecordingReranker:
+        called = False
+
+        async def rerank(
+            self,
+            query,
+            chunks,
+            top_n=10,
+            is_stale: StaleChecker | None = None,
+        ):
+            self.called = True
+            return chunks
+
+    reranker = RecordingReranker()
+    pipeline = SearchPipeline([FakeRetriever()], FakeFuser(), reranker)
+
+    async def is_stale():
+        return True
+
+    with pytest.raises(SearchPipelineCancelled):
+        await pipeline.execute("query", is_stale=is_stale)
+
+    assert reranker.called is False
 
 
 def test_build_pipeline_allows_missing_cross_encoder_when_reranker_disabled():
@@ -338,6 +382,49 @@ async def test_cross_encoder_reranker_serializes_predict_calls(monkeypatch):
     )
 
     assert FakeCrossEncoder.max_active_calls == 1
+
+
+@pytest.mark.asyncio
+async def test_cross_encoder_reranker_skips_stale_request_after_queue(monkeypatch):
+    predict_calls = 0
+
+    class FakeCrossEncoder:
+        def __init__(self, model_name, **kwargs):
+            pass
+
+        def predict(self, pairs):
+            nonlocal predict_calls
+            predict_calls += 1
+            time.sleep(0.02)
+            return [0.5 for _ in pairs]
+
+    monkeypatch.setattr(
+        "app.search.rerankers.cross_encoder.CrossEncoder",
+        FakeCrossEncoder,
+    )
+
+    reranker = CrossEncoderReranker()
+    chunks = [ScoredChunk(id="c1", doc_id="d1", text="first", page_num=1)]
+    stale = False
+
+    first_result_task = asyncio.create_task(reranker.rerank("query", chunks))
+    await asyncio.sleep(0)
+
+    async def is_second_stale():
+        return stale
+
+    second_result_task = asyncio.create_task(
+        reranker.rerank("query", chunks, is_stale=is_second_stale)
+    )
+    await asyncio.sleep(0.005)
+    stale = True
+
+    first_result = await first_result_task
+    second_result = await second_result_task
+
+    assert len(first_result) == 1
+    assert second_result == []
+    assert predict_calls == 1
 
 
 def test_cross_encoder_reranker_uses_cache_only_loading(monkeypatch):

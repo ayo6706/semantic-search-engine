@@ -28,11 +28,9 @@ class _FakeSession:
 
 
 @pytest.mark.asyncio
-@patch("app.services.document.SearchCacheService")
-@patch("app.services.document.get_cache_client")
+@patch("app.services.document.get_search_cache")
 async def test_delete_document_invalidates_search_cache(
-    mock_get_cache,
-    mock_cache_class,
+    mock_get_search_cache,
 ):
     doc_id = uuid.uuid4()
     mock_repo = AsyncMock()
@@ -43,7 +41,7 @@ async def test_delete_document_invalidates_search_cache(
     vector_store = AsyncMock()
     service = DocumentService(mock_repo, vector_store)
     mock_cache = AsyncMock()
-    mock_cache_class.return_value = mock_cache
+    mock_get_search_cache.return_value = mock_cache
 
     await service.delete_document(doc_id)
 

@@ -3,12 +3,12 @@ import redis.asyncio as redis
 from unittest.mock import AsyncMock
 
 from app.schemas.search import SearchRequest, SearchMode, SearchResponse, SearchResult
-from app.services.cache import _build_cache_key, SearchCacheService
+from app.integrations.cache.redis import RedisCache
 
 def test_cache_key_determinism():
     req1 = SearchRequest(query="test", search_mode=SearchMode.HYBRID, top_k=10, use_reranker=True)
     req2 = SearchRequest(query="test", search_mode=SearchMode.HYBRID, top_k=10, use_reranker=True)
-    assert _build_cache_key(req1) == _build_cache_key(req2)
+    assert RedisCache.build_cache_key(req1) == RedisCache.build_cache_key(req2)
 
 def test_cache_key_varies_with_params():
     req_base = SearchRequest(query="test", search_mode=SearchMode.HYBRID, top_k=10, use_reranker=True)
@@ -17,18 +17,18 @@ def test_cache_key_varies_with_params():
     req_top_k = SearchRequest(query="test", search_mode=SearchMode.HYBRID, top_k=5, use_reranker=True)
     req_rerank = SearchRequest(query="test", search_mode=SearchMode.HYBRID, top_k=10, use_reranker=False)
 
-    base_key = _build_cache_key(req_base)
-    assert base_key != _build_cache_key(req_query)
-    assert base_key != _build_cache_key(req_mode)
-    assert base_key != _build_cache_key(req_top_k)
-    assert base_key != _build_cache_key(req_rerank)
+    base_key = RedisCache.build_cache_key(req_base)
+    assert base_key != RedisCache.build_cache_key(req_query)
+    assert base_key != RedisCache.build_cache_key(req_mode)
+    assert base_key != RedisCache.build_cache_key(req_top_k)
+    assert base_key != RedisCache.build_cache_key(req_rerank)
 
 @pytest.mark.asyncio
 async def test_cache_get_returns_none_on_miss():
     mock_redis = AsyncMock(spec=redis.Redis)
     mock_redis.get = AsyncMock(return_value=None)
     
-    cache = SearchCacheService(mock_redis)
+    cache = RedisCache(mock_redis)
     req = SearchRequest(query="test")
     assert await cache.get(req) is None
 
@@ -52,7 +52,7 @@ async def test_cache_get_returns_stored_response():
     mock_redis = AsyncMock(spec=redis.Redis)
     mock_redis.get = AsyncMock(return_value=resp.model_dump_json())
     
-    cache = SearchCacheService(mock_redis)
+    cache = RedisCache(mock_redis)
     retrieved = await cache.get(req)
     
     assert retrieved is not None
@@ -65,7 +65,7 @@ async def test_cache_graceful_degradation():
     mock_redis = AsyncMock(spec=redis.Redis)
     mock_redis.get = AsyncMock(side_effect=Exception("Redis connection failed"))
     
-    cache = SearchCacheService(mock_redis)
+    cache = RedisCache(mock_redis)
     req = SearchRequest(query="test")
     
     # Should not raise
@@ -94,7 +94,7 @@ async def test_invalidate_all_deletes_search_keys():
         
     mock_redis.scan_iter = mock_scan_iter
     
-    cache = SearchCacheService(mock_redis)
+    cache = RedisCache(mock_redis)
     await cache.invalidate_all()
 
     mock_redis.pipeline.assert_called_once_with(transaction=False)
