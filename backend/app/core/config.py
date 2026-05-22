@@ -19,6 +19,7 @@ class InfraSettings(BaseSettings):
         REDIS_SOCKET_TIMEOUT: Redis socket read/write timeout in seconds.
         API_HOST: Host to bind the API server.
         API_PORT: Port to bind the API server.
+        DEBUG: Enables development-only behavior such as auto-reload.
         UPLOAD_DIR: Local directory for uploaded files.
         CORS_ORIGINS: List of allowed origins for CORS.
     """
@@ -34,6 +35,7 @@ class InfraSettings(BaseSettings):
     REDIS_SOCKET_TIMEOUT: float = 2.0
     API_HOST: str = "0.0.0.0"
     API_PORT: int = 8080
+    DEBUG: bool = False
     UPLOAD_DIR: str = "uploads"
     MAX_UPLOAD_BYTES: int = 26214400  # 25 MB
     CORS_ORIGINS: list[str] = ["http://localhost:3000"]
