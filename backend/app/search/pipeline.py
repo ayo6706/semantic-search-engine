@@ -1,10 +1,18 @@
 import asyncio
+import logging
 
 from app.core.config import search_settings
 from app.schemas.search import ScoredChunk
 from app.search.fusers.base import BaseFuser
 from app.search.rerankers.base import BaseReranker
 from app.search.retrievers.base import BaseRetriever
+from app.search.types import DisconnectChecker, StaleChecker
+
+logger = logging.getLogger(__name__)
+
+
+class SearchPipelineCancelled(Exception):
+    pass
 
 
 class SearchPipeline:
@@ -28,7 +36,9 @@ class SearchPipeline:
         self,
         query: str,
         top_k: int = 10,
-        doc_ids: list[str] | None = None
+        doc_ids: list[str] | None = None,
+        is_disconnected: DisconnectChecker | None = None,
+        is_stale: StaleChecker | None = None,
     ) -> list[ScoredChunk]:
         """Execute the search pipeline.
 
@@ -36,6 +46,11 @@ class SearchPipeline:
             query: Search query string.
             top_k: Number of final results to return.
             doc_ids: Optional list of document IDs to filter by.
+            is_disconnected: Optional async callable that returns True
+                when the client has disconnected. Checked before expensive
+                stages to avoid wasted work.
+            is_stale: Optional callable that returns True when a newer search
+                from the same client session has superseded this request.
 
         Returns:
             Ranked list of top_k ScoredChunk objects.
@@ -50,8 +65,30 @@ class SearchPipeline:
         ]
         result_sets = await asyncio.gather(*tasks)
 
+        if is_stale and await is_stale():
+            logger.info("Search request became stale after retrieval, skipping reranking")
+            raise SearchPipelineCancelled
+
+        if is_disconnected and await is_disconnected():
+            logger.debug("Client disconnected after retrieval, skipping fusion and reranking")
+            raise SearchPipelineCancelled
+
         fused_results = self.fuser.fuse(list(result_sets))
 
         rerank_candidate_count = max(top_k, search_settings.RERANK_TOP_N)
         rerank_candidates = fused_results[:rerank_candidate_count]
-        return await self.reranker.rerank(query, rerank_candidates, top_n=top_k)
+
+        if is_stale and await is_stale():
+            logger.info("Search request became stale after fusion, skipping reranking")
+            raise SearchPipelineCancelled
+
+        if is_disconnected and await is_disconnected():
+            logger.debug("Client disconnected after fusion, skipping reranking")
+            raise SearchPipelineCancelled
+
+        return await self.reranker.rerank(
+            query,
+            rerank_candidates,
+            top_n=top_k,
+            is_stale=is_stale,
+        )
