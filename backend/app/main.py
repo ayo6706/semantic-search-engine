@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan — startup and shutdown.
 
     Startup: Eagerly verify core infrastructure connectivity (fail-fast).
-    Shutdown: Dispose database engine and close Redis connection.
+    Shutdown: Dispose configured infrastructure connections.
 
     Yields:
         Control to the running application.
@@ -73,9 +73,11 @@ app.include_router(api_v1_router.api_router)
 
 if __name__ == "__main__":
     import uvicorn
+
+    reload_enabled = config.infra_settings.DEBUG
     uvicorn.run(
         "app.main:app",
         host=config.infra_settings.API_HOST,
         port=config.infra_settings.API_PORT,
-        reload=True,
+        reload=reload_enabled,
     )

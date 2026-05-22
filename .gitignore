@@ -224,7 +224,5 @@ uploads/
 /*.db
 docs/_build/
 test_uploads
-docs
-.specs
 backend/eval/temp_integration_pdfs/
 
