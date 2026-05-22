@@ -66,6 +66,30 @@
   font-size: 0.85rem;
   color: var(--text);
   font-family: var(--sans);
+  white-space: nowrap;
+}
+
+.search-submit {
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--bg);
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  height: 32px;
+  padding: 0 12px;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.search-submit:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.search-submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 .shortcut-hint {

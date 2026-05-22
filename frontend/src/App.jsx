@@ -20,6 +20,7 @@ function App() {
     minPage, setMinPage,
     maxPage, setMaxPage,
     filteredResults,
+    submitSearch,
     retry
   } = useSearch();
 
@@ -59,6 +60,7 @@ function App() {
           <SearchBar
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onSubmit={submitSearch}
             isLoading={isLoading}
             resultCount={results ? filteredResults.length : null}
           />
@@ -88,7 +90,7 @@ function App() {
           {!results && !query && !isLoading && (
             <div className="empty-state initial">
               <h2>Semantic Search Engine</h2>
-              <p>Start typing to search across all indexed documents.</p>
+              <p>Enter a query to search across all indexed documents.</p>
               <kbd className="mono">/</kbd> <span>to focus</span>
             </div>
           )}

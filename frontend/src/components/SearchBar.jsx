@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import './SearchBar.css';
 
-export default function SearchBar({ value, onChange, isLoading, resultCount }) {
+export default function SearchBar({ value, onChange, onSubmit, isLoading, resultCount }) {
   const inputRef = useRef(null);
   const [isFocused, setIsFocused] = useState(false);
 
@@ -22,8 +22,16 @@ export default function SearchBar({ value, onChange, isLoading, resultCount }) {
     if (e.key === 'Escape') {
       onChange({ target: { value: '' } });
       inputRef.current?.blur();
+      return;
+    }
+
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      onSubmit();
     }
   };
+
+  const canSubmit = value.trim().length > 0 && !isLoading;
 
   return (
     <div className={`search-bar-container ${isFocused ? 'focused' : ''}`}>
@@ -57,6 +65,15 @@ export default function SearchBar({ value, onChange, isLoading, resultCount }) {
         {resultCount !== undefined && resultCount !== null && (
           <span className="result-hint">{resultCount} results</span>
         )}
+        <button
+          type="button"
+          className="search-submit"
+          onClick={onSubmit}
+          disabled={!canSubmit}
+          aria-label="Search"
+        >
+          Search
+        </button>
         <kbd className={`shortcut-hint ${isFocused ? 'hidden' : ''}`}>/</kbd>
       </div>
     </div>

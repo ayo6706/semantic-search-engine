@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { searchDocuments } from '../api/client';
 
 export default function useSearch() {
-  const [query, setQuery] = useState('');
+  const [query, setQueryValue] = useState('');
   const [results, setResults] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -14,8 +14,23 @@ export default function useSearch() {
   const [minPage, setMinPage] = useState(1);
   const [maxPage, setMaxPage] = useState(100);
 
-  const debounceTimeout = useRef(null);
-  const latestRequestRef = useRef(0);
+  const abortControllerRef = useRef(null);
+  const searchSessionId = useRef(
+    globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`
+  );
+  const searchRequestId = useRef(0);
+  const submittedQueryRef = useRef('');
+
+  const setQuery = useCallback((value) => {
+    setQueryValue(value);
+    if (!value.trim()) {
+      submittedQueryRef.current = '';
+      abortControllerRef.current?.abort();
+      setResults(null);
+      setError(null);
+      setIsLoading(false);
+    }
+  }, []);
 
   const executeSearch = useCallback(async (currentQuery, mode, reranker, docIds) => {
     if (!currentQuery.trim()) {
@@ -24,8 +39,12 @@ export default function useSearch() {
       return;
     }
 
-    const requestId = Date.now();
-    latestRequestRef.current = requestId;
+    // Cancel any in-flight request so the backend stops processing stale work.
+    abortControllerRef.current?.abort();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+    const requestId = searchRequestId.current + 1;
+    searchRequestId.current = requestId;
 
     setIsLoading(true);
     setError(null);
@@ -39,47 +58,46 @@ export default function useSearch() {
         ...(docIds.length > 0 ? { doc_ids: docIds } : {})
       };
 
-      const response = await searchDocuments(params);
-      
-      // Only update if this is the latest request
-      if (latestRequestRef.current === requestId) {
+      const response = await searchDocuments(params, {
+        signal: controller.signal,
+        searchSessionId: searchSessionId.current,
+        searchRequestId: requestId,
+      });
+
+      if (!controller.signal.aborted) {
         setResults(response);
       }
     } catch (err) {
-      if (latestRequestRef.current === requestId) {
-        setError(err.message);
-      }
+      if (controller.signal.aborted) return;
+      setError(err.message);
     } finally {
-      if (latestRequestRef.current === requestId) {
+      if (!controller.signal.aborted) {
         setIsLoading(false);
       }
     }
   }, []);
 
-  const prevFilters = useRef({ searchMode, useReranker, selectedDocIds });
-
-  // Effect for debounced search when query changes
-  useEffect(() => {
-    if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
-    
-    const filtersChanged = 
-      prevFilters.current.searchMode !== searchMode ||
-      prevFilters.current.useReranker !== useReranker ||
-      prevFilters.current.selectedDocIds !== selectedDocIds;
-
-    if (filtersChanged) {
-      prevFilters.current = { searchMode, useReranker, selectedDocIds };
-      executeSearch(query, searchMode, useReranker, selectedDocIds);
-    } else {
-      debounceTimeout.current = setTimeout(() => {
-        executeSearch(query, searchMode, useReranker, selectedDocIds);
-      }, 300);
-    }
-
-    return () => {
-      if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
-    };
+  const submitSearch = useCallback(() => {
+    const submittedQuery = query.trim();
+    submittedQueryRef.current = submittedQuery;
+    executeSearch(submittedQuery, searchMode, useReranker, selectedDocIds);
   }, [query, searchMode, useReranker, selectedDocIds, executeSearch]);
+
+  useEffect(() => {
+    if (submittedQueryRef.current) {
+      executeSearch(
+        submittedQueryRef.current,
+        searchMode,
+        useReranker,
+        selectedDocIds
+      );
+    }
+  }, [searchMode, useReranker, selectedDocIds, executeSearch]);
+
+  // Cancel in-flight request on unmount.
+  useEffect(() => {
+    return () => abortControllerRef.current?.abort();
+  }, []);
 
   const filteredResults = results?.results?.filter(r => 
     (r.score || 0) >= scoreThreshold &&
@@ -97,6 +115,12 @@ export default function useSearch() {
     minPage, setMinPage,
     maxPage, setMaxPage,
     filteredResults,
-    retry: () => executeSearch(query, searchMode, useReranker, selectedDocIds)
+    submitSearch,
+    retry: () => executeSearch(
+      submittedQueryRef.current || query,
+      searchMode,
+      useReranker,
+      selectedDocIds
+    )
   };
 }
