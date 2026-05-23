@@ -61,6 +61,12 @@ services:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/semantic_search
       - CHROMA_HOST=chromadb
       - REDIS_URL=redis://:searchredis@redis:6379/0
+    healthcheck:
+      test: ["CMD", "python", "-c", "import json, sys, urllib.request; data = json.load(urllib.request.urlopen('http://127.0.0.1:8080/api/v1/health')); sys.exit(0 if data.get('status') == 'ok' else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     depends_on:
       postgres:
         condition: service_healthy
@@ -101,7 +107,8 @@ services:
     environment:
       - VITE_API_TARGET=http://api:8080
     depends_on:
-      - api
+      api:
+        condition: service_healthy
 
 volumes:
   pgdata:
