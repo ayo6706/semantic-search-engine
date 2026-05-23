@@ -44,7 +44,13 @@ from app.core.config import search_settings
 from app.search.rerankers.cross_encoder import CrossEncoderReranker
 
 # Runtime patch CrossEncoderReranker with simulated predictions to avoid PyTorch dependency execution.
-async def simulated_rerank(self, query: str, chunks: list[ScoredChunk], top_n: int = 10) -> list[ScoredChunk]:
+async def simulated_rerank(
+    self,
+    query: str,
+    chunks: list[ScoredChunk],
+    top_n: int = 10,
+    is_stale=None,
+) -> list[ScoredChunk]:
     query_words = [w.strip(",.()\"'").lower() for w in query.split() if len(w) > 2]
     for chunk in chunks:
         dense = chunk.dense_score or 0.0
